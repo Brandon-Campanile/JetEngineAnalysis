@@ -2,6 +2,7 @@
 %10/26/2018
 %Authors: Loren Isakson, Brandon Campanile, Matthew Yates
 clear;clc
+close all
 %% Inputs
 Ta = 0;    %ambient temperature, Kelvin
 Pa = 0;    %ambient pressure, Pa
@@ -20,8 +21,11 @@ Pr_c = 0;   %compressor stagnation pressure ratio
 Pr_f = 0;   %fan stagnation pressure ratio
 f = 0;      %main burner fuel-air ratio
 f_ab = 0;   %afterburner fuel-air ratio
-Beta = 0;   %bypass ratio
+beta = 0;   %bypass ratio
 b = 0;      %bleed ratio
+
+global R   %global variables
+R = 8314/28.8;  %universal gas constant / molecular weight of the gas
 
 %% Function Library
 
@@ -35,25 +39,36 @@ To1 = Ta.*(1+0.5.*(gamma-1).*M.^2);
 Po1 = Pa.*(1+nd.*(To1/Ta - 1)).^(gamma/(gamma-1));
 end
 
-function [To2, Po2] = fan(To1, Po1, Pr)
+function [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta)
 %stagnation temp, press, pressure ratio, polytropic efficiency
 gamma = 1.4;
-np = 0.9;
-MW = 28.8;
-R = 8314/MW;
+npf = 0.9;
 Cp = gamma*R/(gamma-1);
-if Pr < 1.1 || Pr > 1.5
+if Prf < 1.1 || Prf > 1.5
     error('Fan pressure ratio is constrained 1.1 <= Pr <= 1.5');
 end 
-To2 = To1.*(Pr).^((gamma-1)/gamma/np);
+To2 = To1.*(Pr).^((gamma-1)/gamma/npf);
 Po2 = Po1.*Pr;
+wf_ma = Cp*(1+beta)*(To2-To1); %work done by the fan on the fluid
 end
 
-function [To3, Po3] = compressor(To2, Po2, gamma, n, MW)
-
+function [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf)
+gamma = 1.38;
+npc = 0.9;
+Cp = gamma*R/(gamma-1);
+if Prc < 60/Prf
+    error('Compressor pressure ratio must be less than 60/fan pressure ratio');
+end
+Po3 = Po2*Prc;
+To3 = To2*(Prc).^((gamma-1)/gamma/npc);
+wc_ma = Cp*(To3-To2);
 end
 
-function [To4, Po4] = burner(To3, Po3, deltaH)
+function [To4, Po4] = burner(To3, Po3, Tmax, deltaH)
+gamma = 1.33;
+nb = 0.99;
+Prb = 0.98;
+Cp = gamma*R/(gamma-1);
 
 end
 
@@ -88,5 +103,3 @@ end
 function [Toec, Poec] = combinedNozzle(To7, Po7)
 
 end
-
-%hello brandon
