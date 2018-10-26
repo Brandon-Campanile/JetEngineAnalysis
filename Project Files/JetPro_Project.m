@@ -1,7 +1,17 @@
 %% AE 4451 Jet & Rocket Propulsion Project
 %10/26/2018
 %Authors: Loren Isakson, Brandon Campanile, Matthew Yates
-
+clear;clc
+%% Inputs
+Ta = 0;    %ambient temperature, Kelvin
+Pa = 0;    %ambient pressure, Pa
+Pf = 0;    %fuel storage pressure
+M = 0;      %flight mach number
+Prc = 0;   %compressor stagnation pressure ratio
+Prf = 0;   %fan stagnation pressure ratio
+f = 0;      %main burner fuel-air ratio
+fab = 0;   %afterburner fuel-air ratio
+%hello world
 %% Inputs
 T_a = 0;    %ambient temperature
 P_a = 0;    %ambient pressure
@@ -18,25 +28,64 @@ b = 0;      %bleed ratio
 
 %Ambient conditions provided T_a and P_a
 
-function [T_o1, P_o1] = inlet(M, T_a, P_a, gamma)
-    T_o1 = T_a.*(1+0.5.*(gamma-1).*M.^2);
-    P_o1 = P_a.*(1+0.5.*(gamma-1).*M.^2).^(gamma/(gamma-1));
+function [To1, Po1] = diffuser(Ta, Pa, M)
+%static ambient temp, press, mach number, gamma, adiabatic efficiency
+gamma = 1.4;
+nd = 0.92;
+To1 = Ta.*(1+0.5.*(gamma-1).*M.^2);
+Po1 = Pa.*(1+nd.*(To1/Ta - 1)).^(gamma/(gamma-1));
 end
 
-function [T_o2, P_o2] = diffuser(T_o1, P_o1, gamma, n, MW)
+function [To2, Po2] = fan(To1, Po1, Pr)
+%stagnation temp, press, pressure ratio, polytropic efficiency
+gamma = 1.4;
+np = 0.9;
+MW = 28.8;
+R = 8314/MW;
+Cp = gamma*R/(gamma-1);
+if Pr < 1.1 || Pr > 1.5
+    error('Fan pressure ratio is constrained 1.1 <= Pr <= 1.5');
+end 
+To2 = To1.*(Pr).^((gamma-1)/gamma/np);
+Po2 = Po1.*Pr;
+end
+
+function [To3, Po3] = compressor(To2, Po2, gamma, n, MW)
 
 end
 
-function [T_o3, P_o3] = compressor(T_o2, P_o2, gamma, n, MW)
+function [To4, Po4] = burner(To3, Po3, deltaH)
 
 end
 
-function [T_o4, P_o4] = combustor(T_o3, P_o3
+function [To5_1, Po5_1] = turbine(To4, Po4)
 
+end
 
+function [To5_m, Po5_m] = turbineMixer(To5, Po5)
 
+end
 
+function [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m)
 
+end
 
+function [To6, Po6] = afterburner(To5_2, Po5_2)
 
-%
+end
+
+function [Toe, Poe] = coreNozzle(To6, Po6)
+
+end
+
+function [Toef, Poef] = fanNozzle(Toe, Poe)
+
+end
+
+function [To7, Po7] = nozzleMixer(Toef, Poef)
+
+end
+
+function [Toec, Poec] = combinedNozzle(To7, Po7)
+
+end
