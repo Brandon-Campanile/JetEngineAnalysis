@@ -25,7 +25,7 @@ function [T_o2, P_o2] = compressor(T_o1, P_o1)
 
 end
 
-function [T_o3, P_o3] = 
+function [T_o3, P_o3] = hi
 
 
 
