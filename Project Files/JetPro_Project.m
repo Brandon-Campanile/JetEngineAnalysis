@@ -26,6 +26,10 @@ b = 0;      %bleed ratio
 %% Function Library
 
 %Ambient conditions provided T_a and P_a
+function table = engineAnalysis(Ta,Pa,M,Prc,Prf,B,b,f,fab)
+
+end
+
 
 function [To1, Po1] = diffuser(Ta, Pa, M)
 %static ambient temp, press, mach number, gamma, adiabatic efficiency
