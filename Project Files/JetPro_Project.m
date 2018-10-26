@@ -11,7 +11,6 @@ Prc = 0;   %compressor stagnation pressure ratio
 Prf = 0;   %fan stagnation pressure ratio
 f = 0;      %main burner fuel-air ratio
 fab = 0;   %afterburner fuel-air ratio
-%hello world
 %% Inputs
 T_a = 0;    %ambient temperature
 P_a = 0;    %ambient pressure
