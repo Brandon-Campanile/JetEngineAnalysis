@@ -4,12 +4,14 @@
 clear;clc
 close all
 %% Inputs
+%% Will replace with gui output straight to engineAnalysis function
 Ta = 220;    %ambient temperature
 Pa = 10*10^3;    %ambient pressure
 Pf = 0;    %fuel storage pressure
 M = 1.5;      %flight mach number
 Prc = 30;   %compressor stagnation pressure ratio
 Prf = 1.2;   %fan stagnation pressure ratio
+<<<<<<< HEAD
 f = 0.018;      %main burner fuel-air ratio
 fab = 0.010;   %afterburner fuel-air ratio
 beta = 2;   %bypass ratio
@@ -32,10 +34,25 @@ Prab = 0.97;  %afterburner pressure ratio
 MW=[MWf, MWc, MWb, MWt1, MWtm, MWt2, MWcN, MWfn, MWn, MWn];
 %Ambient conditions provided T_a and P_a
 function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix, Tmax_ab, Prab)
+=======
+f = 0;      %main burner fuel-air ratio
+fab = 0;   %afterburner fuel-air ratio
+beta = 0;   %bypass ratio
+b = 0;      %bleed ratio
+
+global R_   %global variables
+R_ = 8314;  %universal gas constant
+
+%% Main Function
+function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, Nmix, Tmax_ab, Prab)
+>>>>>>> 121df3d14a189c82cf48fc761ca574d29fa86b0c
     % Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa]; M = flight mach number
     % Prc = compressor stagnation pressure ratio; Prf = fan stagnation; pressure; ratio; B = bypass ratio; b = bleed ratio
     % f = main burner fuel-air ratio; fab = afterburner fuel-air ratio; ab = afterburner boolean; mix = nozzle mixing boolean
     % Tmax_ab = max stagnation temp afternburner; Prab = stagnation pressure ratio afterburner
+    syms Te Tef To7 Tec Po7 uec uef ue Po6 To6
+    MW=[MWf, MWc, MWb, MWt1, MWtm, MWt2, MWcN, MWfn, MWn, MWn];
+
     if ~Prf % add user input logic
         [To1, Po1] = diffuser(Ta, Pa, M);
         [To2, Po2, wf_ma] = fan(To1, Po1, Prf, B, MW(0));
@@ -44,15 +61,15 @@ function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix, 
         [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(3));
         [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(4));
         [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW(5));
-        if ab && mix
+        if ab && Nmix
             [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
             [To7, Po7] = nozzleMixer(To6, Po6, B, f, fab, Po2, To2);
             [Tec, uec] = combinedNozzle(To7, Po7, Pa, MW(6));
-        elseif ab && ~mix
+        elseif ab && ~Nmix
             [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
             [Tef, uef] = fanNozzle(To2, Po2, Pa, MW(7));
             [Te, ue] = coreNozzle(To6, Po6, Pa, MW(8));
-        elseif ~ab && mix
+        elseif ~ab && Nmix
             [To7, Po7] = nozzleMixer(To5_2, Po5_2, B, f, fab, Po2, To2);
             [Tec, uec] = combinedNozzle(To7, Po7, Pa, MW(6));
         else
@@ -71,7 +88,18 @@ function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix, 
             [Te, ue] = coreNozzle(To6, Po6, Pa, MW(8));
         end
     end
+    warning('off','MATLAB:xlswrite:AddSheet')
+    xlswrite('Results', ['To1', 'To2', 'To3', 'To4', 'To5_1', 'To5_m', 'To5_2', 'To6', 'To7';
+        To1, To2, To3, To4, To5_1, To5_m, To5_2, To6, To7;
+        'Po1', 'Po2', 'Po3', 'Po4', 'Po5_1', 'Po5_m', 'Po5_2', 'Po6', 'Po7';
+        Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7;
+        'Te_combined', 'ue_combined', 'Te_fan', 'ue_fan', 'Te_core', 'ue_core';
+        Tec, uec, Tef, uef, Te, ue]);
 end
+<<<<<<< HEAD
+=======
+
+>>>>>>> 121df3d14a189c82cf48fc761ca574d29fa86b0c
 %% Component Functions
 function [To1, Po1] = diffuser(Ta, Pa, M)
 %static ambient temp, press, mach number, gamma, adiabatic efficiency
