@@ -4,15 +4,6 @@
 clear;clc
 close all
 %% Inputs
-Ta = 0;    %ambient temperature, Kelvin
-Pa = 0;    %ambient pressure, Pa
-Pf = 0;    %fuel storage pressure
-M = 0;      %flight mach number
-Prc = 0;   %compressor stagnation pressure ratio
-Prf = 0;   %fan stagnation pressure ratio
-f = 0;      %main burner fuel-air ratio
-fab = 0;   %afterburner fuel-air ratio
-%% Inputs
 T_a = 0;    %ambient temperature
 P_a = 0;    %ambient pressure
 P_f = 0;    %fuel storage pressure
@@ -30,6 +21,16 @@ R = 8314/28.8;  %universal gas constant / molecular weight of the gas
 %% Function Library
 
 %Ambient conditions provided T_a and P_a
+function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab)
+% Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa]; M = flight mach number
+% Prc = compressor stagnation pressure ratio; Prf = fan stagnation; pressure; ratio; B = bypass ratio; b = bleed ratio
+% f = main burner fuel-air ratio; fab = afterburner fuel-air ratio
+if b = 0;
+    
+
+
+end
+end
 
 function [To1, Po1] = diffuser(Ta, Pa, M)
 %static ambient temp, press, mach number, gamma, adiabatic efficiency
