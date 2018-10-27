@@ -34,11 +34,11 @@ if Prf
     [To5_m, Po5_m] = turbineMixer(To5, Po5);
     [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m);
     if ab && mix
-        [To6, Po6] = afterburner(To5_2, Po5_2);
+        [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
         [To7, Po7] = nozzleMixer(Toef, Poef);
         [Toec, Poec] = combinedNozzle(To7, Po7);
     elseif ab && ~mix
-        [To6, Po6] = afterburner(To5_2, Po5_2);
+        [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
         [Toef, Poef] = fanNozzle(Toe, Poe);
         [Toe, Poe] = coreNozzle(To6, Po6);
     elseif ~ab && mix
@@ -54,7 +54,7 @@ else
     [To5_1, Po5_1] = turbine(To4, Po4);
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1);
     if ab
-        [To6, Po6] = afterburner(To5_m, Po5_m);
+        [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
     else
         To6 = To5_m;
         Po6 = Po5_m;
@@ -141,7 +141,7 @@ function [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab)
 To6 = Tmax_ab;
 Po6 = Prab*Po5_2;
 end
-%%
+
 function [Te, ue] = coreNozzle(To6, Po6, Pa)
 gamma = 1.35;
 nc = 0.95;
@@ -149,7 +149,7 @@ Cp = gamma*R/(gamma-1);
 Te = To6*(1-nc*(1-(Pa/Po6)^((gamma-1)/gamma)));
 ue = sqrt(2*Cp*(To6-Te));
 end
-%+
+
 function [Tef, uef] = fanNozzle(To2, Po2, Pa)
 gamma = 1.4;
 nf = 0.97;
@@ -157,16 +157,18 @@ Cp = gamma*R/(gamma-1);
 Tef = To2*(1-nf*(1-(Pa/Po2)^((gamma-1)/gamma)));
 uef = sqrt(2*Cp*(To2-Tef));
 end
-%or
+
 function [To7, Po7] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2)
 Prnm = 0.8;
 To7 = (beta*To2+(1+f+fab)*To6)/(1+beta+f+fab);
 gamma = 1.44 - (1.39*10^-4)*To7 + (3.57*10^-8)*To7;
 Po7 = Po6*Prnm*((Po2/Po6)^(beta/(1+f+fab)))*((To7/To6)^(gamma/(gamma-1)))*((To6/To2)^((gamma*beta)/(gamma-1)/(1+f+fab)));
 end
-%+
-function [Toec, Poec] = combinedNozzle(To7, Po7)
 
-
+function [Tec, uec] = combinedNozzle(To7, Po7, Pa)
+gamma = 1.37;
+nc = 0.95;
+Cp = gamma*R/(gamma-1);
+Tec = To7*(1-nc*(1-(Pa/Po7)^((gamma-1)/gamma)));
+uec = sqrt(2*Cp*(To7-Tec));
 end
-%%
