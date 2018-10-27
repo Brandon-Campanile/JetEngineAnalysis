@@ -21,11 +21,22 @@ R = 8314/28.8;  %universal gas constant / molecular weight of the gas
 %% Function Library
 
 %Ambient conditions provided T_a and P_a
-function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab)
+function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix)
 % Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa]; M = flight mach number
 % Prc = compressor stagnation pressure ratio; Prf = fan stagnation; pressure; ratio; B = bypass ratio; b = bleed ratio
-% f = main burner fuel-air ratio; fab = afterburner fuel-air ratio
-if b = 0;
+% f = main burner fuel-air ratio; fab = afterburner fuel-air ratio; ab = afterburner boolean; mix = nozzle mixing boolean
+if Prf == 0
+    [To1, Po1] = diffuser(Ta, Pa, M);
+    [To3, Po3, wc_ma] = compressor(To1, Po1, Prc, Prf);
+    [To4, Po4] = burner(To3, Po3, Tmax, deltaH);
+    [To5_1, Po5_1] = turbine(To4, Po4);
+    [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1);
+    [To6, Po6] = afterburner(To5_1, Po5_1);
+    [Toe, Poe] = coreNozzle(To6, Po6);
+else
+    turbofan
+end
+ 
     
 
 
@@ -103,8 +114,5 @@ end
 
 function [Toec, Poec] = combinedNozzle(To7, Po7)
 
-<<<<<<< HEAD
+
 end
-=======
-end
->>>>>>> 0c57c7079c55e02f6636a5b833de6b4ad7c01442
