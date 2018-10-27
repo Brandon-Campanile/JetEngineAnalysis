@@ -21,46 +21,48 @@ R_ = 8314;  %universal gas constant
 %% Component Functions
 
 %Ambient conditions provided T_a and P_a
-function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix)
-% Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa]; M = flight mach number
-% Prc = compressor stagnation pressure ratio; Prf = fan stagnation; pressure; ratio; B = bypass ratio; b = bleed ratio
-% f = main burner fuel-air ratio; fab = afterburner fuel-air ratio; ab = afterburner boolean; mix = nozzle mixing boolean
-if Prf
-    [To1, Po1] = diffuser(Ta, Pa, M);
-    [To2, Po2, wf_ma] = fan(To1, Po1, Prf, B);
-    [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf);
-    [To4, Po4, wp_ma] = burner(Po3, b, f);
-    [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f);
-    [To5_m, Po5_m] = turbineMixer(To5, Po5);
-    [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m);
-    if ab && mix
-        [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
-        [To7, Po7] = nozzleMixer(Toef, Poef);
-        [Toec, Poec] = combinedNozzle(To7, Po7);
-    elseif ab && ~mix
-        [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
-        [Toef, Poef] = fanNozzle(Toe, Poe);
-        [Toe, Poe] = coreNozzle(To6, Po6);
-    elseif ~ab && mix
-        [To7, Po7] = nozzleMixer(Toef, Poef);
-        [Toec, Poec] = combinedNozzle(To7, Po7);
+function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix, Tmax_ab, Prab, [MWf, MWc, MWb, MWt1, MWtm, MWt2, MWcN, MWfn, MWn, MWcN, MWn])
+    % Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa]; M = flight mach number
+    % Prc = compressor stagnation pressure ratio; Prf = fan stagnation; pressure; ratio; B = bypass ratio; b = bleed ratio
+    % f = main burner fuel-air ratio; fab = afterburner fuel-air ratio; ab = afterburner boolean; mix = nozzle mixing boolean
+    % Tmax_ab = max stagnation temp afternburner; Prab = stagnation pressure ratio afterburner
+    if ~Prf % add user input logic
+        [To1, Po1] = diffuser(Ta, Pa, M);
+        [To2, Po2, wf_ma] = fan(To1, Po1, Prf, B, MWf);
+        [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf, MWc);
+        [To4, Po4, wp_ma] = burner(Po3, b, f, MWb);
+        [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MWt1);
+        [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MWtm);
+        [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MWt2);
+        if ab && mix
+            [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
+            [To7, Po7] = nozzleMixer(To6, Po6, B, f, fab, Po2, To2);
+            [Tec, uec] = combinedNozzle(To7, Po7, Pa, MWcN);
+        elseif ab && ~mix
+            [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
+            [Tef, uef] = fanNozzle(To2, Po2, Pa, MWfn);
+            [Te, ue] = coreNozzle(To6, Po6, Pa, MWn);
+        elseif ~ab && mix
+            [To7, Po7] = nozzleMixer(To5_2, Po5_2, B, f, fab, Po2, To2);
+            [Tec, uec] = combinedNozzle(To7, Po7, Pa, MWcN);
+        else
+            [Te, ue] = coreNozzle(To5_2, Po5_2, Pa, MWn);
+        end
     else
-        [Toe, Poe] = coreNozzle(To6, Po6);
+        [To1, Po1] = diffuser(Ta, Pa, M);
+        [To3, Po3, wc_ma] = compressor(To1, Po1, Prc, Prf);
+        [To4, Po4] = burner(To3, Po3, Tmax, deltaH);
+        [To5_1, Po5_1] = turbine(To4, Po4);
+        [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1);
+        if ab
+            [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
+        else
+            To6 = To5_m;
+            Po6 = Po5_m;
+        end
+        [Te, ue] = coreNozzle(To6, Po6, Pa, MW);
     end
-else
-    [To1, Po1] = diffuser(Ta, Pa, M);
-    [To3, Po3, wc_ma] = compressor(To1, Po1, Prc, Prf);
-    [To4, Po4] = burner(To3, Po3, Tmax, deltaH);
-    [To5_1, Po5_1] = turbine(To4, Po4);
-    [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1);
-    if ab
-        [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
-    else
-        To6 = To5_m;
-        Po6 = Po5_m;
-    end
-    [Toe, Poe] = coreNozzle(To6, Po6);
-end
+    table='hello'
 end
 
 function [To1, Po1] = diffuser(Ta, Pa, M)
@@ -141,11 +143,7 @@ function [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab)
 To6 = Tmax_ab;
 Po6 = Prab*Po5_2;
 end
-<<<<<<< HEAD
 
-function [Te, ue] = coreNozzle(To6, Po6, Pa)
-=======
-%%
 function [Te, ue] = coreNozzle(To6, Po6, Pa, MW)
 >>>>>>> c2925fbee04d1c1f09affd74e3c9d272a73fc902
 gamma = 1.35;
@@ -154,13 +152,8 @@ Cp = gamma*(R_/MW)/(gamma-1);
 Te = To6*(1-nc*(1-(Pa/Po6)^((gamma-1)/gamma)));
 ue = sqrt(2*Cp*(To6-Te));
 end
-<<<<<<< HEAD
 
-function [Tef, uef] = fanNozzle(To2, Po2, Pa)
-=======
-%+
 function [Tef, uef] = fanNozzle(To2, Po2, Pa, MW)
->>>>>>> c2925fbee04d1c1f09affd74e3c9d272a73fc902
 gamma = 1.4;
 nf = 0.97;
 Cp = gamma*(R_/MW)/(gamma-1);
@@ -174,11 +167,7 @@ To7 = (beta*To2+(1+f+fab)*To6)/(1+beta+f+fab);
 gamma = 1.44 - (1.39*10^-4)*To7 + (3.57*10^-8)*To7;
 Po7 = Po6*Prnm*((Po2/Po6)^(beta/(1+f+fab)))*((To7/To6)^(gamma/(gamma-1)))*((To6/To2)^((gamma*beta)/(gamma-1)/(1+f+fab)));
 end
-<<<<<<< HEAD
 
-function [Tec, uec] = combinedNozzle(To7, Po7, Pa)
-=======
-%+
 function [Tec, uec] = combinedNozzle(To7, Po7, Pa, MW)
 >>>>>>> c2925fbee04d1c1f09affd74e3c9d272a73fc902
 gamma = 1.37;
@@ -186,10 +175,5 @@ nc = 0.95;
 Cp = gamma*(R_/MW)/(gamma-1);
 Tec = To7*(1-nc*(1-(Pa/Po7)^((gamma-1)/gamma)));
 uec = sqrt(2*Cp*(To7-Tec));
-<<<<<<< HEAD
 end
-=======
-end
-%%
 
->>>>>>> c2925fbee04d1c1f09affd74e3c9d272a73fc902
