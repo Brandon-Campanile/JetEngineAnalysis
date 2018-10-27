@@ -64,7 +64,7 @@ function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, Nmix,
         end
     end
     warning('off','MATLAB:xlswrite:AddSheet')
-    xlswrite('Results', ['To1', 'To2', 'To3', 'To4', 'To5_1', 'To5_m', 'To5_2', 'To6', 'To7';
+    table = xlswrite('Results', ['To1', 'To2', 'To3', 'To4', 'To5_1', 'To5_m', 'To5_2', 'To6', 'To7';
         To1, To2, To3, To4, To5_1, To5_m, To5_2, To6, To7;
         'Po1', 'Po2', 'Po3', 'Po4', 'Po5_1', 'Po5_m', 'Po5_2', 'Po6', 'Po7';
         Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7;
@@ -182,5 +182,18 @@ Cp = gamma*(R_/MW)/(gamma-1);
 Tec = To7*(1-nc*(1-(Pa/Po7)^((gamma-1)/gamma)));
 uec = sqrt(2*Cp*(To7-Tec));
 end
+
+%% Specific Thrust and Fuel Consumption
+
+function [ST TSFC]=Thisishowyoudoit(f, fab, ue, u)
+    
+
+
+
+
+
+
+
+
 
 
