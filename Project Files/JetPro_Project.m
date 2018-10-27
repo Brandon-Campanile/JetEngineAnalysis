@@ -4,14 +4,14 @@
 clear;clc
 close all
 %% Inputs
-T_a = 0;    %ambient temperature
-P_a = 0;    %ambient pressure
-P_f = 0;    %fuel storage pressure
-M = 0;      %flight mach number
-Pr_c = 0;   %compressor stagnation pressure ratio
-Pr_f = 0;   %fan stagnation pressure ratio
+Ta = 220;    %ambient temperature
+Pa = 10*10^3;    %ambient pressure
+Pf = 0;    %fuel storage pressure
+M = 1.5;      %flight mach number
+Pr_c = 30;   %compressor stagnation pressure ratio
+Prf = 1.2;   %fan stagnation pressure ratio
 f = 0;      %main burner fuel-air ratio
-f_ab = 0;   %afterburner fuel-air ratio
+fab = 0;   %afterburner fuel-air ratio
 beta = 0;   %bypass ratio
 b = 0;      %bleed ratio
 
@@ -146,7 +146,6 @@ Po6 = Prab*Po5_2;
 end
 
 function [Te, ue] = coreNozzle(To6, Po6, Pa, MW)
->>>>>>> c2925fbee04d1c1f09affd74e3c9d272a73fc902
 gamma = 1.35;
 nc = 0.95;
 Cp = gamma*(R_/MW)/(gamma-1);
@@ -170,11 +169,11 @@ Po7 = Po6*Prnm*((Po2/Po6)^(beta/(1+f+fab)))*((To7/To6)^(gamma/(gamma-1)))*((To6/
 end
 
 function [Tec, uec] = combinedNozzle(To7, Po7, Pa, MW)
->>>>>>> c2925fbee04d1c1f09affd74e3c9d272a73fc902
 gamma = 1.37;
 nc = 0.95;
 Cp = gamma*(R_/MW)/(gamma-1);
 Tec = To7*(1-nc*(1-(Pa/Po7)^((gamma-1)/gamma)));
 uec = sqrt(2*Cp*(To7-Tec));
 end
+
 
