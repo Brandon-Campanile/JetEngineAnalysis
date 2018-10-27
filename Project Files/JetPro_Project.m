@@ -8,17 +8,27 @@ Ta = 220;    %ambient temperature
 Pa = 10*10^3;    %ambient pressure
 Pf = 0;    %fuel storage pressure
 M = 1.5;      %flight mach number
-Pr_c = 30;   %compressor stagnation pressure ratio
+Prc = 30;   %compressor stagnation pressure ratio
 Prf = 1.2;   %fan stagnation pressure ratio
-f = 0;      %main burner fuel-air ratio
-fab = 0;   %afterburner fuel-air ratio
-beta = 0;   %bypass ratio
-b = 0;      %bleed ratio
+f = 0.018;      %main burner fuel-air ratio
+fab = 0.010;   %afterburner fuel-air ratio
+beta = 2;   %bypass ratio
+b = 0.1;      %bleed ratio
+Tmax_ab = 2200; %afterburner max temperature
+Prab = 0.97;  %afterburner pressure ratio
 
-global R_   %global variables
-R_ = 8314;  %universal gas constant
-
-%% Component Functions
+%% Test Program
+[To1, Po1] = diffuser(Ta, Pa, M);
+[To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta, 28.8);
+[To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf, 28.8);
+[To4, Po4, wp_ma] = burner(Po3, b, f, 28.8);
+[To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, 28.8);
+[To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, 28.8);
+[To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, 28.8);
+[To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
+[To7, Po7] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2);
+[Tec, uec] = combinedNozzle(To7, Po7, Pa, 28.8);
+%% Engine Functions
 MW=[MWf, MWc, MWb, MWt1, MWtm, MWt2, MWcN, MWfn, MWn, MWn];
 %Ambient conditions provided T_a and P_a
 function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix, Tmax_ab, Prab)
@@ -62,33 +72,33 @@ function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix, 
         end
     end
 end
-
+%% Component Functions
 function [To1, Po1] = diffuser(Ta, Pa, M)
 %static ambient temp, press, mach number, gamma, adiabatic efficiency
 gamma = 1.4;
 nd = 0.92;
-To1 = Ta.*(1+0.5.*(gamma-1).*M.^2);
-Po1 = Pa.*(1+nd.*(To1/Ta - 1)).^(gamma/(gamma-1));
+To1 = Ta*(1+0.5*(gamma-1)*M^2);
+Po1 = Pa*(1+nd*(To1/Ta - 1))^(gamma/(gamma-1));
 end
 
 function [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta, MW)
 %stagnation temp, press, pressure ratio, polytropic efficiency
 gamma = 1.4;
 npf = 0.9;
-Cp = gamma*(R_/MW)/(gamma-1);
+Cp = gamma*(8314/MW)/(gamma-1);
 if Prf < 1.1 || Prf > 1.5
     error('Fan pressure ratio is constrained 1.1 <= Pr <= 1.5');
 end 
-To2 = To1.*(Pr).^((gamma-1)/gamma/npf);
-Po2 = Po1.*Pr;
+To2 = To1.*(Prf).^((gamma-1)/gamma/npf);
+Po2 = Po1.*Prf;
 wf_ma = Cp*(1+beta)*(To2-To1); %work done by the fan on the fluid
 end
 
 function [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf, MW)
 gamma = 1.38;
 npc = 0.9;
-Cp = gamma*(R_/MW)/(gamma-1);
-if Prc < 60/Prf
+Cp = gamma*(8314/MW)/(gamma-1);
+if Prc > 60/Prf
     error('Compressor pressure ratio must be less than 60/fan pressure ratio');
 end
 Po3 = Po2*Prc;
@@ -100,7 +110,7 @@ function [To4, Po4, wp_ma] = burner(Po3, b, f, MW)
 gamma = 1.33;
 nb = 0.99;
 Prb = 0.98;
-Cp = gamma*(R_/MW)/(gamma-1);
+Cp = gamma*(8314/MW)/(gamma-1);
 Tomax = 1300; %kelvin
 Cb = 700; %kelvin
 bmax = 0.12;
@@ -116,7 +126,7 @@ end
 function [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW)
 npt = 0.92;
 gamma = 1.33;
-Cp = gamma*(R_/MW)/(gamma-1);
+Cp = gamma*(8314/MW)/(gamma-1);
 To5_1 = To4 - (1/(Cp*(1+f-b))*(wc_ma + wp_ma));
 TR = To5_1/To4;
 Po5_1 = Po4*(1+((TR-1)^2)/(TR^(1/npt) - 1))^(gamma/(gamma-1));
@@ -124,14 +134,14 @@ end
 
 function [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW)
 gamma = 1.34;
-Cp = gamma*(R_/MW)/(gamma-1);
+Cp = gamma*(8314/MW)/(gamma-1);
 Po5_m = Po5_1;
 To5_m = (b*To3 + (1 + f - b)*To5_1)/(1+f);
 end
 
 function [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW)
 gamma = 1.33;
-Cp = gamma*(R_/MW)/(gamma-1);
+Cp = gamma*(8314/MW)/(gamma-1);
 To5_2 = To5_m - wf_ma/(Cp*(1+f));
 TR = To5_2/To5_m;
 Po5_2 = Po5_m*(1 + ((TR-1)^2)/(TR-1))^(gamma/(gamma-1));
@@ -145,7 +155,7 @@ end
 function [Te, ue] = coreNozzle(To6, Po6, Pa, MW)
 gamma = 1.35;
 nc = 0.95;
-Cp = gamma*(R_/MW)/(gamma-1);
+Cp = gamma*(8314/MW)/(gamma-1);
 Te = To6*(1-nc*(1-(Pa/Po6)^((gamma-1)/gamma)));
 ue = sqrt(2*Cp*(To6-Te));
 end
@@ -153,7 +163,7 @@ end
 function [Tef, uef] = fanNozzle(To2, Po2, Pa, MW)
 gamma = 1.4;
 nf = 0.97;
-Cp = gamma*(R_/MW)/(gamma-1);
+Cp = gamma*(8314/MW)/(gamma-1);
 Tef = To2*(1-nf*(1-(Pa/Po2)^((gamma-1)/gamma)));
 uef = sqrt(2*Cp*(To2-Tef));
 end
@@ -168,7 +178,7 @@ end
 function [Tec, uec] = combinedNozzle(To7, Po7, Pa, MW)
 gamma = 1.37;
 nc = 0.95;
-Cp = gamma*(R_/MW)/(gamma-1);
+Cp = gamma*(8314/MW)/(gamma-1);
 Tec = To7*(1-nc*(1-(Pa/Po7)^((gamma-1)/gamma)));
 uec = sqrt(2*Cp*(To7-Tec));
 end
