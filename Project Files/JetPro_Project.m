@@ -19,13 +19,15 @@ global R_   %global variables
 R_ = 8314;  %universal gas constant
 
 %% Component Functions
-MW=[MWf, MWc, MWb, MWt1, MWtm, MWt2, MWcN, MWfn, MWn, MWn];
 %Ambient conditions provided T_a and P_a
+
+
 function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix, Tmax_ab, Prab)
     % Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa]; M = flight mach number
     % Prc = compressor stagnation pressure ratio; Prf = fan stagnation; pressure; ratio; B = bypass ratio; b = bleed ratio
     % f = main burner fuel-air ratio; fab = afterburner fuel-air ratio; ab = afterburner boolean; mix = nozzle mixing boolean
     % Tmax_ab = max stagnation temp afternburner; Prab = stagnation pressure ratio afterburner
+    MW=[MWf, MWc, MWb, MWt1, MWtm, MWt2, MWcN, MWfn, MWn, MWn];
     if ~Prf % add user input logic
         [To1, Po1] = diffuser(Ta, Pa, M);
         [To2, Po2, wf_ma] = fan(To1, Po1, Prf, B, MW(0));
@@ -61,6 +63,7 @@ function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix, 
             [Te, ue] = coreNozzle(To6, Po6, Pa, MW(8));
         end
     end
+    xlswrite()
 end
 
 function [To1, Po1] = diffuser(Ta, Pa, M)
