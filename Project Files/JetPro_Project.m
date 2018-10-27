@@ -134,7 +134,11 @@ gamma = 1.44 - (1.39*10^-4)*To7 + (3.57*10^-8)*To7;
 Po7 = Po6*Prnm*((Po2/Po6)^(beta/(1+f+fab)))*((To7/To6)^(gamma/(gamma-1)))*((To6/To2)^((gamma*beta)/(gamma-1)/(1+f+fab)));
 end
 %+
-function [Toec, Poec] = combinedNozzle(To7, Po7)
-
+function [Tec, uec] = combinedNozzle(To7, Po7, Pa)
+gamma = 1.37;
+nc = 0.95;
+Cp = gamma*R/(gamma-1);
+Tec = To7*(1-nc*(1-(Pa/Po7)^((gamma-1)/gamma)));
+uec = sqrt(2*Cp*(To7-Tec));
 end
 %%
