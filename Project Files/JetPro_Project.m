@@ -18,7 +18,7 @@ b = 0;      %bleed ratio
 global R_   %global variables
 R_ = 8314;  %universal gas constant
 
-%% Function Library
+%% Component Functions
 
 %Ambient conditions provided T_a and P_a
 function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab)
@@ -142,3 +142,4 @@ Tec = To7*(1-nc*(1-(Pa/Po7)^((gamma-1)/gamma)));
 uec = sqrt(2*Cp*(To7-Tec));
 end
 %%
+
