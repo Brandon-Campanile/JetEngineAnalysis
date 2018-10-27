@@ -25,23 +25,43 @@ function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix)
 % Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa]; M = flight mach number
 % Prc = compressor stagnation pressure ratio; Prf = fan stagnation; pressure; ratio; B = bypass ratio; b = bleed ratio
 % f = main burner fuel-air ratio; fab = afterburner fuel-air ratio; ab = afterburner boolean; mix = nozzle mixing boolean
-if Prf == 0
+if Prf
+    [To1, Po1] = diffuser(Ta, Pa, M);
+    [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta);
+    [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf);
+    [To4, Po4, wp_ma] = burner(Po3, b, f);
+    [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f);
+    [To5_m, Po5_m] = turbineMixer(To5, Po5);
+    [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m);
+    if ab && mix
+        [To6, Po6] = afterburner(To5_2, Po5_2);
+        [To7, Po7] = nozzleMixer(Toef, Poef);
+        [Toec, Poec] = combinedNozzle(To7, Po7);
+    elseif ab && ~mix
+        [To6, Po6] = afterburner(To5_2, Po5_2);
+        [Toef, Poef] = fanNozzle(Toe, Poe);
+        [Toe, Poe] = coreNozzle(To6, Po6);
+    elseif ~ab && mix
+        [To7, Po7] = nozzleMixer(Toef, Poef);
+        [Toec, Poec] = combinedNozzle(To7, Po7);
+    else
+        [Toe, Poe] = coreNozzle(To6, Po6);
+    end
+else
     [To1, Po1] = diffuser(Ta, Pa, M);
     [To3, Po3, wc_ma] = compressor(To1, Po1, Prc, Prf);
     [To4, Po4] = burner(To3, Po3, Tmax, deltaH);
     [To5_1, Po5_1] = turbine(To4, Po4);
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1);
-    [To6, Po6] = afterburner(To5_1, Po5_1);
+    if ab
+        [To6, Po6] = afterburner(To5_m, Po5_m);
+    else
+        To6 = To5_m;
+        Po6 = Po5_m;
+    end
     [Toe, Poe] = coreNozzle(To6, Po6);
-else
-    turbofan
 end
- 
-    
-
-
 end
-
 
 function [To1, Po1] = diffuser(Ta, Pa, M)
 %static ambient temp, press, mach number, gamma, adiabatic efficiency
@@ -76,16 +96,30 @@ To3 = To2*(Prc).^((gamma-1)/gamma/npc);
 wc_ma = Cp*(To3-To2);
 end
 
-function [To4, Po4] = burner(To3, Po3, Tmax, deltaH)
+function [To4, Po4, wp_ma] = burner(Po3, b, f)
 gamma = 1.33;
 nb = 0.99;
 Prb = 0.98;
 Cp = gamma*R/(gamma-1);
-
+Tomax = 1300; %kelvin
+Cb = 700; %kelvin
+bmax = 0.12;
+To4 = Tomax + Cb*(b/bmax)^0.5;
+Po4 = Po3*Prb;
+%Fuel Pump
+deltaP_inject = 550*10^3;
+np = 0.35;
+f_density = 780;
+wp_ma = f*deltaP_inject/np/f_density;
 end
 
-function [To5_1, Po5_1] = turbine(To4, Po4)
-
+function [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f)
+npt = 0.92;
+gamma = 1.33;
+Cp = gamma*R/(gamma-1);
+To5_1 = To4 - (1/(Cp*(1+f-b))*(wc_ma + wp_ma);
+TR = To5_1/To4;
+Po5_1 = Po4*(1+((TR-1)^2)/(TR^(1/npt) - 1))^(gamma/(gamma-1));
 end
 
 function [To5_m, Po5_m] = turbineMixer(To5, Po5)
