@@ -11,7 +11,7 @@ Pf = 0;    %fuel storage pressure
 M = 1.5;      %flight mach number
 Prc = 30;   %compressor stagnation pressure ratio
 Prf = 1.2;   %fan stagnation pressure ratio
-<<<<<<< HEAD
+
 f = 0.018;      %main burner fuel-air ratio
 fab = 0.010;   %afterburner fuel-air ratio
 beta = 2;   %bypass ratio
@@ -34,7 +34,7 @@ Prab = 0.97;  %afterburner pressure ratio
 MW=[MWf, MWc, MWb, MWt1, MWtm, MWt2, MWcN, MWfn, MWn, MWn];
 %Ambient conditions provided T_a and P_a
 function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix, Tmax_ab, Prab)
-=======
+
 f = 0;      %main burner fuel-air ratio
 fab = 0;   %afterburner fuel-air ratio
 beta = 0;   %bypass ratio
@@ -45,7 +45,7 @@ R_ = 8314;  %universal gas constant
 
 %% Main Function
 function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, Nmix, Tmax_ab, Prab)
->>>>>>> 121df3d14a189c82cf48fc761ca574d29fa86b0c
+
     % Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa]; M = flight mach number
     % Prc = compressor stagnation pressure ratio; Prf = fan stagnation; pressure; ratio; B = bypass ratio; b = bleed ratio
     % f = main burner fuel-air ratio; fab = afterburner fuel-air ratio; ab = afterburner boolean; mix = nozzle mixing boolean
@@ -96,10 +96,7 @@ function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, Nmix,
         'Te_combined', 'ue_combined', 'Te_fan', 'ue_fan', 'Te_core', 'ue_core';
         Tec, uec, Tef, uef, Te, ue]);
 end
-<<<<<<< HEAD
-=======
 
->>>>>>> 121df3d14a189c82cf48fc761ca574d29fa86b0c
 %% Component Functions
 function [To1, Po1] = diffuser(Ta, Pa, M)
 %static ambient temp, press, mach number, gamma, adiabatic efficiency
