@@ -64,16 +64,30 @@ To3 = To2*(Prc).^((gamma-1)/gamma/npc);
 wc_ma = Cp*(To3-To2);
 end
 
-function [To4, Po4] = burner(To3, Po3, Tmax, deltaH)
+function [To4, Po4, wp_ma] = burner(Po3, b, f)
 gamma = 1.33;
 nb = 0.99;
 Prb = 0.98;
 Cp = gamma*R/(gamma-1);
-
+Tomax = 1300; %kelvin
+Cb = 700; %kelvin
+bmax = 0.12;
+To4 = Tomax + Cb*(b/bmax)^0.5;
+Po4 = Po3*Prb;
+%Fuel Pump
+deltaP_inject = 550*10^3;
+np = 0.35;
+f_density = 780;
+wp_ma = f*deltaP_inject/np/f_density;
 end
 
-function [To5_1, Po5_1] = turbine(To4, Po4)
-
+function [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f)
+npt = 0.92;
+gamma = 1.33;
+Cp = gamma*R/(gamma-1);
+To5_1 = To4 - (1/(Cp*(1+f-b))*(wc_ma + wp_ma);
+TR = To5_1/To4;
+Po5_1 = Po4*(1+((TR-1)^2)/(TR^(1/npt) - 1))^(gamma/(gamma-1));
 end
 
 function [To5_m, Po5_m] = turbineMixer(To5, Po5)
