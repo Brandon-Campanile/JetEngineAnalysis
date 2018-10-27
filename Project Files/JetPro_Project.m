@@ -27,7 +27,7 @@ function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, B, b, f, fab, ab, mix)
 % f = main burner fuel-air ratio; fab = afterburner fuel-air ratio; ab = afterburner boolean; mix = nozzle mixing boolean
 if Prf
     [To1, Po1] = diffuser(Ta, Pa, M);
-    [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta);
+    [To2, Po2, wf_ma] = fan(To1, Po1, Prf, B);
     [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf);
     [To4, Po4, wp_ma] = burner(Po3, b, f);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f);
