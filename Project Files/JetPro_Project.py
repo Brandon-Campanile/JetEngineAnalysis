@@ -73,7 +73,7 @@ def burner(To3, Po3, PRb, y, MW, nb, delH, Tmaxo, Cb1, b, bmax):
     To4 = (1/(1-b+f))*((1-b)*To3+nb*delH*f/cpb)
     Po4 = Po3*PRb
     Tmax = Tmaxo +Cb1*(b/bmax)**0.5
-    #fmax = (1-To3/To4)/(delH*nb/cpb/To4-1) #needs improvement
+    #fmax = (1-To3/To4)/(delH*nb/cpb/To4-1) -needs improvement (probably optimization value)
     return Po4, To4, Tmax
 
 def fuel_pump(delp, rhof, nadp, f):
