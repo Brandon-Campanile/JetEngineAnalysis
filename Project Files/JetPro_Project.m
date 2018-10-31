@@ -216,7 +216,7 @@ Tec = To7*(1-nc*(1-(Pa/Po7)^((gamma-1)/gamma)));
 uec = sqrt(2*Cp*(To7-Tec));
 end
 
-%% Specific Thrust and Fuel Consumption
+%% Specific Thrust, Specific Fuel Consumption, Efficiencies
 
 function [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, uef, u, beta, Pa, M)
 if ~uef
