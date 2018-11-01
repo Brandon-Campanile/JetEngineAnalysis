@@ -143,12 +143,11 @@ function [To4, Po4, wp_ma] = burner(Po3, b, f, MW)
 gamma = 1.33;
 nb = 0.99;
 Prb = 0.98;
-delH = 45e6;
 Cp = gamma*(R_/MW)/(gamma-1);
 Tomax = 1300; %kelvin
 Cb = 700; %kelvin
 bmax = 0.12;
-To4 = (1/(1-b+f))*((1-b)*To3+nb*delH*f/Cp);
+To4 = (1/(1-b+f))*((1-b)*To3+nb*HVf*f/Cp);
 Tomax = Tomax + Cb*(b/bmax)^0.5;
 Po4 = Po3*Prb;
 %Fuel Pump
@@ -187,14 +186,13 @@ function [To6, Po6] = afterburner(Po5_2, To5_2, Prab, gamma, f, fab, MW)
 cpab = gamma*(R_/MW)/(gamma-1);
 Tmax_ab = 1300;
 nab=.96;
-delH=45e6;
 if fab>0
     PR = Prab;
 else
     PR = 1;
 end
 Po6 = Po5_2*PR;
-To6 = min((1/(1+f+fab))*((1+f)*To5_2+nab*delH*fab/cpab), Tmax_ab);
+To6 = min((1/(1+f+fab))*((1+f)*To5_2+nab*HVf*fab/cpab), Tmax_ab);
 end
 
 function [Te, ue] = coreNozzle(To6, Po6, Pa, MW)
