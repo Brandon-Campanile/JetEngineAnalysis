@@ -1,0 +1,33 @@
+# This file tells Git how to handle end of line characters
+
+# Source files
+# ============
+*.m             text
+*.mu            text
+*               text=auto # anything not listed
+
+
+# Binary files
+# ============
+*.p             binary
+*.mex*          binary
+*.fig           binary
+*.mat           binary
+*.mdl           binary
+*.slx           binary
+*.mdlp          binary
+*.slxp          binary
+*.sldd          binary
+*.mltbx         binary
+*.mlappinstall  binary
+*.mlpkginstall  binary
+*.mn            binary
+*.mlx           binary
+
+# Other recommended binary files (Not matlab specific)
+*.xlsx binary -diff -merge
+*.docx binary -diff -merge
+*.pdf binary -diff -merge
+*.jpg binary -diff -merge
+*.png binary -diff -merge
+
