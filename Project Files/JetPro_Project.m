@@ -32,7 +32,7 @@ function table = engineAnalysis(Ta, Pa, Pf, M, Prc, Prf, beta, b, f, fab, ab, Nm
 % f = main burner fuel-air ratio; fab = afterburner fuel-air ratio; ab = afterburner boolean; mix = nozzle mixing boolean
 % Tmax_ab = max stagnation temp afternburner; Prab = stagnation pressure ratio afterburner
 syms Te Tef To7 Tec Po7 uec uef ue Po6 To6
-MW=[MWf, MWc, MWb, MWt1, MWtm, MWt2, MWcN, MWfn, MWn, MWn];
+MW=[MWf, MWc, MWb, MWt1, MWtm, MWt2, MWcN, MWfn, MWn, MWab];
 u=M*sqrt(1.4*Ta*R_/MW(0));
 ST=0;
 i=0;
@@ -56,12 +56,12 @@ while 2.73>ST || ST>2.75 % Loop until ST=2.74 to meet goal 1. Then keeping this 
         [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(4));
         [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW(5));
         if ab && Nmix
-            [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
+            [To6, Po6] = afterburner(Po5_2, To5_2, Prab, f, fab, MW(9));
             [To7, Po7] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2);
             [Tec, uec] = combinedNozzle(To7, Po7, Pa, MW(6));
             [ST, TSFC, effth, effp, effo] = performance(f, fab, uec, uec, u, beta, Pa, M);
         elseif ab && ~Nmix
-            [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab);
+            [To6, Po6] = afterburner(Po5_2, To5_2, Prab, f, fab, MW(9));
             [Tef, uef] = fanNozzle(To2, Po2, Pa, MW(7));
             [Te, ue] = coreNozzle(To6, Po6, Pa, MW(8));
             [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, uef, u, beta, Pa, M);
@@ -80,7 +80,7 @@ while 2.73>ST || ST>2.75 % Loop until ST=2.74 to meet goal 1. Then keeping this 
         [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(3));
         [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(4));
         if ab
-            [To6, Po6] = afterburner(Po5_m, Tmax_ab, Prab);
+            [To6, Po6] = afterburner(Po5_2, To5_2, Prab, f, fab, MW(9));
             [Te, ue] = coreNozzle(To6, Po6, Pa, MW(8));
             [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, 0, Pa, M);
         else
@@ -105,13 +105,13 @@ function [To1, Po1] = diffuser(Ta, Pa, M)
 %static ambient temp, press, mach number, gamma, adiabatic efficiency
 gamma = 1.4;
 nd = 0.92;
-To1 = Ta.*(1+0.5.*(gamma-1).*M.^2);
-if M<1
+if M<=1
     rd=1;
 else
     rd=1-.075*(M-1)^1.35;
 end
 Po1 = (Pa.*(1+nd.*(To1/Ta - 1)).^(gamma/(gamma-1)))*rd;
+To1 = Ta.*(1+0.5.*(gamma-1).*M.^2);
 end
 
 function [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta, MW)
@@ -122,8 +122,8 @@ Cp = gamma*(R_/MW)/(gamma-1);
 if Prf < 1.1 || Prf > 1.5
     error('Fan pressure ratio is constrained 1.1 <= Pr <= 1.5');
 end 
-To2 = To1.*(Pr).^((gamma-1)/gamma/npf);
-Po2 = Po1.*Pr;
+To2 = To1.*(Prf).^((gamma-1)/gamma/npf);
+Po2 = Po1.*Prf;
 wf_ma = Cp*(1+beta)*(To2-To1); %work done by the fan on the fluid
 end
 
@@ -143,11 +143,13 @@ function [To4, Po4, wp_ma] = burner(Po3, b, f, MW)
 gamma = 1.33;
 nb = 0.99;
 Prb = 0.98;
+delH = 45e6;
 Cp = gamma*(R_/MW)/(gamma-1);
 Tomax = 1300; %kelvin
 Cb = 700; %kelvin
 bmax = 0.12;
-To4 = Tomax + Cb*(b/bmax)^0.5;
+To4 = (1/(1-b+f))*((1-b)*To3+nb*delH*f/Cp);
+Tomax = Tomax + Cb*(b/bmax)^0.5;
 Po4 = Po3*Prb;
 %Fuel Pump
 deltaP_inject = 550*10^3;
@@ -160,29 +162,39 @@ function [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW)
 npt = 0.92;
 gamma = 1.33;
 Cp = gamma*(R_/MW)/(gamma-1);
-To5_1 = To4 - (1/(Cp*(1+f-b))*(wc_ma + wp_ma));
+To5_1 = To4 - (wc_ma + wp_ma)/(Cp*(1+f-b));
 TR = To5_1/To4;
-Po5_1 = Po4*(1+((TR-1)^2)/(TR^(1/npt) - 1))^(gamma/(gamma-1));
+Po5_1 = Po4*(TR^(1/npt))^(gamma/(gamma-1));
 end
 
 function [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW)
 gamma = 1.34;
 Cp = gamma*(R_/MW)/(gamma-1);
-Po5_m = Po5_1;
-To5_m = (b*To3 + (1 + f - b)*To5_1)/(1+f);
+To5_m = (b*To3 + (1+f-b)*To5_1)/(1+f);
+Po5_m = Po5_1*((To5_m/To5_1)^(gamma/(gamma-1)))*(To5_1/To3)^(gamma*b/((gamma-1)*(1+f))); % 1+f-b?
 end
 
 function [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW)
 gamma = 1.33;
+npft = 0.92;
 Cp = gamma*(R_/MW)/(gamma-1);
 To5_2 = To5_m - wf_ma/(Cp*(1+f));
 TR = To5_2/To5_m;
-Po5_2 = Po5_m*(1 + ((TR-1)^2)/(TR-1))^(gamma/(gamma-1));
+Po5_2 = Po5_m*(TR^(1/npft))^(gamma/(gamma-1));
 end
 
-function [To6, Po6] = afterburner(Po5_2, Tmax_ab, Prab)
-To6 = Tmax_ab;
-Po6 = Prab*Po5_2;
+function [To6, Po6] = afterburner(Po5_2, To5_2, Prab, gamma, f, fab, MW)
+cpab = gamma*(R_/MW)/(gamma-1);
+Tmax_ab = 1300;
+nab=.96;
+delH=45e6;
+if fab>0
+    PR = Prab;
+else
+    PR = 1;
+end
+Po6 = Po5_2*PR;
+To6 = min((1/(1+f+fab))*((1+f)*To5_2+nab*delH*fab/cpab), Tmax_ab);
 end
 
 function [Te, ue] = coreNozzle(To6, Po6, Pa, MW)
@@ -205,7 +217,7 @@ function [To7, Po7] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2)
 Prnm = 0.8;
 To7 = (beta*To2+(1+f+fab)*To6)/(1+beta+f+fab);
 gamma = 1.44 - (1.39*10^-4)*To7 + (3.57*10^-8)*To7;
-Po7 = Po6*Prnm*((Po2/Po6)^(beta/(1+f+fab)))*((To7/To6)^(gamma/(gamma-1)))*((To6/To2)^((gamma*beta)/(gamma-1)/(1+f+fab)));
+Po7 = Po6*Prnm*((Po2/Po6)^(beta/(1+beta+f+fab)))*((To7/To6)^(gamma/(gamma-1)))*((To6/To2)^((gamma*beta)/(gamma-1)/(1+beta+f+fab)));
 end
 
 function [Tec, uec] = combinedNozzle(To7, Po7, Pa, MW)
