@@ -5,7 +5,7 @@
 
 %% Main Function
 
-function table = JetPro_Project(eType, Nmix, Ta, Pa, Pf, M, Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tmax, Tmax_ab, MW, eff, y, HVf)
+function out = JetPro_Project(eType, Nmix, Ta, Pa, Pf, M, Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tomax, Tmax_ab, MW, eff, y, HVf)
 % Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa];
 % M = flight mach number Prc = compressor stagnation pressure ratio; Prf = fan stagnation pressure ratio;
 % Prb = burner stagnation pressure ratio; beta = bypass ratio; b = bleed ratio; f = main burner fuel-air ratio;
@@ -27,7 +27,7 @@ if ~eType % turbojet
     To2=To1;
     Po2=Po1;
     [To3, Po3, wc_ma] = compressor(To1, Po1, Prc, Prf, MW(3), y(3), eff(3));
-    [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tmax, Pf);
+    [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     To5_2=To5_m;
@@ -47,7 +47,7 @@ else % turbofan
     [To1, Po1] = diffuser(Ta, Pa, M, y(1), eff(1));
     [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta, MW(2), y(2), eff(2));
     [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf, MW(3), y(3), eff(3));
-    [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tmax, Pf);
+    [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW(7), y(7), eff(6));
@@ -111,9 +111,10 @@ output2 = {'To5.2(K)','Po5.2(kPa)','To6(K)','Po6(kPa)','Te(K)','Pe(K)','Tef(K)',
 perform = {'ue(m/s)','uef(m/s)','ST(kNs/kg)','TSFC(kg/kNs)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)','fmax','fmaxab';
             ue,uef,ST/1000,TSFC,effth*100,effp*100,effo*100,wc_ma/1000,wp_ma/1000,wf_ma/1000,fmax,fabmax};
 warning('off','MATLAB:xlswrite:AddSheet')
-table = xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform]);
+xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform]);
 disp('done.');
 
+out = [ST, TSFC, To3];
 end
 
 
@@ -162,7 +163,7 @@ Tmax = Tomax + Cb*(b/bmax)^0.5;
 Cp = yb*(R/MW)/(yb-1);
 fmax = (1-b)*(1-To3/Tmax)/((nb*HVf/Cp/Tmax)-1);
 if f > fmax
-    error('f is greater than fmax = %d',fmax);
+    f=fmax;
 end
 To4 = (1/(1-b+f))*((1-b)*To3+nb*HVf*f/Cp);
 Po4 = Po3*Prb;
@@ -199,7 +200,7 @@ R = 8314;
 cpab = yab*(R/MW)/(yab-1);
 fabmax = (1+fmax)*((Tmax_ab/To5_2)-1)/((nab*HVf/cpab/To5_2)-(Tmax_ab/To5_2));
 if fab > fabmax
-    error('fab is greater than fabmax = %d',fabmax);
+    fab=fabmax
 end
 Po6 = Po5_2*Prab;
 To6 = (1/(1+f+fab))*((1+f)*To5_2+nab*HVf*fab/cpab);
