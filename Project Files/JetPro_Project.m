@@ -5,14 +5,14 @@
 
 %% Main Function
 
-function out = JetPro_Project(eType, Nmix, Ta, Pa, Pf, M, Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tomax, Tmax_ab, MW, eff, y, HVf)
+function out = JetPro_Project(T, eType, Nmix, Ta, Pa, Pf, M, Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tomax, Tmax_ab, MW, eff, y, HVf)
 % Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa];
 % M = flight mach number Prc = compressor stagnation pressure ratio; Prf = fan stagnation pressure ratio;
 % Prb = burner stagnation pressure ratio; beta = bypass ratio; b = bleed ratio; f = main burner fuel-air ratio;
 % fab = afterburner fuel-air ratio; Nmix = nozzle mixing boolean; Tmax = burner max stagnation temp [K];
 % Tmax_ab = max stagnation temp afternburner [K]; Prab = stagnation pressure ratio afterburner; MW = list of all
 % molecular weights; y = list of all specific heat ratios; eff = list of component efficiencies
-
+% eType = 1 for turbofan 0 for turbojet; Nmix = nozzle mixing?; T = 1 for final run, 0 for optimization run
 syms Te Tef To7 Tec Po7 uec uef ue Po6 To6 Pe Pef ynm wf_ma wc_ma wp_ma fabmax
 
 ynm=y(8);
@@ -97,24 +97,26 @@ else % turbofan
     end
 end
 
-% Generate Table for outputs
-titletop = [{'Inputs'}, cell(1,11)];
-inputs = {'Ta(K)','Pa(kPa)','M','Prc','Prf','beta','b','f','fab';
-           Ta,Pa/1000,M,Prc,Prf,beta,b,f,fab};
-inputs = [inputs cell(2,3)];
-titlebot = [{'Ouputs'}, cell(1,11)];
-output1 = {'To1(K)','Po1(kPa)','To2(K)','Po2(kPa)','To3(K)','Po3(kPa)','To4(K)','Po4(kPa)','To5.1','Po5.1(kPa)','To5.m(K)','Po5.m(kPa)';
-            To1,Po1/1000,To2,Po2/1000,To3,Po3/1000,To4,Po4/1000,To5_1,Po5_1/1000,To5_m,Po5_m/1000};
-output2 = {'To5.2(K)','Po5.2(kPa)','To6(K)','Po6(kPa)','Te(K)','Pe(K)','Tef(K)','Pef(kPa)','To7(K)','ynm','Po7(kPa)','Tec(K)';
-            To5_2,Po5_2/1000,To6,Po6/1000,Te,Pe/1000,Tef,Pef,To7,ynm,Po7,Tec};
+if T
+    % Generate Table for outputs
+    titletop = [{'Inputs'}, cell(1,11)];
+    inputs = {'Ta(K)','Pa(kPa)','M','Prc','Prf','beta','b','f','fab';
+        Ta,Pa/1000,M,Prc,Prf,beta,b,f,fab};
+    inputs = [inputs cell(2,3)];
+    titlebot = [{'Ouputs'}, cell(1,11)];
+    output1 = {'To1(K)','Po1(kPa)','To2(K)','Po2(kPa)','To3(K)','Po3(kPa)','To4(K)','Po4(kPa)','To5.1','Po5.1(kPa)','To5.m(K)','Po5.m(kPa)';
+        To1,Po1/1000,To2,Po2/1000,To3,Po3/1000,To4,Po4/1000,To5_1,Po5_1/1000,To5_m,Po5_m/1000};
+    output2 = {'To5.2(K)','Po5.2(kPa)','To6(K)','Po6(kPa)','Te(K)','Pe(K)','Tef(K)','Pef(kPa)','To7(K)','ynm','Po7(kPa)','Tec(K)';
+        To5_2,Po5_2/1000,To6,Po6/1000,Te,Pe/1000,Tef,Pef,To7,ynm,Po7,Tec};
+    
+    perform = {'ue(m/s)','uef(m/s)','ST(kNs/kg)','TSFC(kg/kNs)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)','fmax','fmaxab';
+        ue,uef,ST/1000,TSFC,effth*100,effp*100,effo*100,wc_ma/1000,wp_ma/1000,wf_ma/1000,fmax,fabmax};
+    warning('off','MATLAB:xlswrite:AddSheet')
+    xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform]);
+    disp('done.');
+end
 
-perform = {'ue(m/s)','uef(m/s)','ST(kNs/kg)','TSFC(kg/kNs)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)','fmax','fmaxab';
-            ue,uef,ST/1000,TSFC,effth*100,effp*100,effo*100,wc_ma/1000,wp_ma/1000,wf_ma/1000,fmax,fabmax};
-warning('off','MATLAB:xlswrite:AddSheet')
-xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform]);
-disp('done.');
-
-out = [ST, TSFC, To3];
+out = [ST, TSFC, To3, To5_2];
 end
 
 
@@ -200,7 +202,7 @@ R = 8314;
 cpab = yab*(R/MW)/(yab-1);
 fabmax = (1+fmax)*((Tmax_ab/To5_2)-1)/((nab*HVf/cpab/To5_2)-(Tmax_ab/To5_2));
 if fab > fabmax
-    fab=fabmax
+    fab=fabmax;
 end
 Po6 = Po5_2*Prab;
 To6 = (1/(1+f+fab))*((1+f)*To5_2+nab*HVf*fab/cpab);
