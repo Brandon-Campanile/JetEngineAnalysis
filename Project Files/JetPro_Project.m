@@ -32,7 +32,7 @@ if ~eType % turbojet
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     To5_2=To5_m;
     Po5_2=Po5_m;
-    if fab % with afterburner
+    if fab>0 % with afterburner
         [To6, Po6, fabmax] = afterburner(Po5_m, To5_m, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [Te, Pe, ue] = coreNozzle(To6, Po6, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
@@ -51,7 +51,7 @@ else % turbofan
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW(7), y(7), eff(6));
-    if fab & Nmix % with afterburner and nozzle mixing 
+    if fab>0 && Nmix % with afterburner and nozzle mixing 
         ue='NA';
         Tef='NA';
         Pef='NA';
@@ -61,7 +61,7 @@ else % turbofan
         [To7, Po7, ynm] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2, Prnm);
         [Tec, Pe, uec] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, uec, uec, u, beta, Pa, M, HVf);
-    elseif fab & ~Nmix % with afterburner, no nozzle mixing
+    elseif fab>0 && ~Nmix % with afterburner, no nozzle mixing
         fabmax='NA';
         To7='NA';
         Po7='NA';
@@ -72,7 +72,7 @@ else % turbofan
         [Tef, Pef, uef] = fanNozzle(To2, Po2, Pa, MW(10), y(10), eff(9));
         [Te, Pe, ue] = coreNozzle(To6, Po6, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, uef, u, beta, Pa, M, HVf);
-    elseif ~fab & Nmix % with nozzle mixing, no afterburner
+    elseif fab==0 && Nmix % with nozzle mixing, no afterburner
         To6='NA';
         Po6='NA';
         ue='NA';
@@ -248,5 +248,3 @@ effth = (beta*uef^2+(1+f+fab)*ue^2-(beta+1)*u^2)/(2*(f+fab)*HVf);
 effp = 2*ST*u/(beta*uef^2+(1+f+fab)*ue^2-(beta+1)*u^2);
 effo = effth*effp;
 end
-
-
