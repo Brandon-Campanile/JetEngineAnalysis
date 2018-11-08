@@ -19,7 +19,7 @@ ynm=y(8);
 R = 8314;
 Pa = Pa*1e3; % ambient pressure in Pa
 u = M*sqrt(y(1)*Ta*R/MW(1)); %vaircraft velocity
-HVf=HVf*1e6;
+
 
 % Run components based on engine cycles
 if ~eType % turbojet
@@ -27,13 +27,13 @@ if ~eType % turbojet
     To2=To1;
     Po2=Po1;
     [To3, Po3, wc_ma] = compressor(To1, Po1, Prc, Prf, MW(3), y(3), eff(3));
-    [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
+    [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     To5_2=To5_m;
     Po5_2=Po5_m;
     if fab>0 % with afterburner
-        [To6, Po6, fabmax] = afterburner(Po5_m, To5_m, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
+        [To6, Po6, fabmax, fab] = afterburner(Po5_m, To5_m, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [Te, Pe, ue] = coreNozzle(To6, Po6, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
     else % without afterburner
@@ -47,7 +47,7 @@ else % turbofan
     [To1, Po1] = diffuser(Ta, Pa, M, y(1), eff(1));
     [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta, MW(2), y(2), eff(2));
     [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf, MW(3), y(3), eff(3));
-    [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
+    [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW(7), y(7), eff(6));
@@ -57,7 +57,7 @@ else % turbofan
         Pef='NA';
         uef='NA';
         Te='NA';
-        [To6, Po6, fabmax] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
+        [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [To7, Po7, ynm] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2, Prnm);
         [Tec, Pe, uec] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, uec, uec, u, beta, Pa, M, HVf);
@@ -68,7 +68,7 @@ else % turbofan
         ynm='NA';
         uec='NA';
         Tec='NA';
-        [To6, Po6, fabmax] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
+        [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [Tef, Pef, uef] = fanNozzle(To2, Po2, Pa, MW(10), y(10), eff(9));
         [Te, Pe, ue] = coreNozzle(To6, Po6, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, uef, u, beta, Pa, M, HVf);
@@ -116,7 +116,7 @@ if T
     disp('done.');
 end
 
-out = [ST, TSFC, To3, To5_2];
+out = [ST, TSFC, To3, To5_2, f, fab];
 end
 
 
@@ -154,7 +154,7 @@ To3 = To2*(Prc).^((yc-1)/yc/nc);
 wc_ma = Cp*(To3-To2);
 end
 
-function [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW, yb, nb, nfp, HVf, Tomax, Pf)
+function [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW, yb, nb, nfp, HVf, Tomax, Pf)
 Cb = 700; %kelvin
 R = 8314;
 bmax = 0.12;
@@ -183,7 +183,7 @@ Po5_1 = Po4*(TR^(1/nt))^(yt/(yt-1));
 end
 
 function [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW, ytm)
-R = 8314;
+%R = 8314;
 %Cp = ytm*(R/MW)/(ytm-1);
 To5_m = (b*To3 + (1+f-b)*To5_1)/(1+f);
 Po5_m = Po5_1*((To5_m/To5_1)^(ytm/(ytm-1)))*(To5_1/To3)^(ytm*b/((ytm-1)*(1+f)));
@@ -197,7 +197,7 @@ TR = To5_2/To5_m;
 Po5_2 = Po5_m*(TR^(1/nft))^(yft/(yft-1));
 end
 
-function [To6, Po6, fabmax] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW, yab, nab, HVf, Tmax_ab)
+function [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW, yab, nab, HVf, Tmax_ab)
 R = 8314;
 cpab = yab*(R/MW)/(yab-1);
 fabmax = (1+fmax)*((Tmax_ab/To5_2)-1)/((nab*HVf/cpab/To5_2)-(Tmax_ab/To5_2));
