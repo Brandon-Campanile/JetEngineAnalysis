@@ -5,21 +5,21 @@
 
 %% Main Function
 
-function table = JetPro_Project(eType, Nmix, Ta, Pa, Pf, M, Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tmax, Tmax_ab, MW, eff, y, HVf)
+function out = JetPro_Project(T, eType, Nmix, Ta, Pa, Pf, M, Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tomax, Tmax_ab, MW, eff, y, HVf)
 % Ta = ambient temperature [Kelvin]; Pa = ambient pressure [kPa]; Pf = fuel storage pressure [kPa];
 % M = flight mach number Prc = compressor stagnation pressure ratio; Prf = fan stagnation pressure ratio;
 % Prb = burner stagnation pressure ratio; beta = bypass ratio; b = bleed ratio; f = main burner fuel-air ratio;
 % fab = afterburner fuel-air ratio; Nmix = nozzle mixing boolean; Tmax = burner max stagnation temp [K];
 % Tmax_ab = max stagnation temp afternburner [K]; Prab = stagnation pressure ratio afterburner; MW = list of all
 % molecular weights; y = list of all specific heat ratios; eff = list of component efficiencies
-
+% eType = 1 for turbofan 0 for turbojet; Nmix = nozzle mixing?; T = 1 for final run, 0 for optimization run
 syms Te Tef To7 Tec Po7 uec uef ue Po6 To6 Pe Pef ynm wf_ma wc_ma wp_ma fabmax
 
 ynm=y(8);
 R = 8314;
 Pa = Pa*1e3; % ambient pressure in Pa
 u = M*sqrt(y(1)*Ta*R/MW(1)); %vaircraft velocity
-HVf=HVf*1e6;
+
 
 % Run components based on engine cycles
 if ~eType % turbojet
@@ -27,13 +27,13 @@ if ~eType % turbojet
     To2=To1;
     Po2=Po1;
     [To3, Po3, wc_ma] = compressor(To1, Po1, Prc, Prf, MW(3), y(3), eff(3));
-    [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tmax, Pf);
+    [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     To5_2=To5_m;
     Po5_2=Po5_m;
-    if fab % with afterburner
-        [To6, Po6, fabmax] = afterburner(Po5_m, To5_m, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
+    if fab>0 % with afterburner
+        [To6, Po6, fabmax, fab] = afterburner(Po5_m, To5_m, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [Te, Pe, ue] = coreNozzle(To6, Po6, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
     else % without afterburner
@@ -47,32 +47,32 @@ else % turbofan
     [To1, Po1] = diffuser(Ta, Pa, M, y(1), eff(1));
     [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta, MW(2), y(2), eff(2));
     [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf, MW(3), y(3), eff(3));
-    [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tmax, Pf);
+    [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW(7), y(7), eff(6));
-    if fab & Nmix % with afterburner and nozzle mixing 
+    if fab>0 && Nmix % with afterburner and nozzle mixing 
         ue='NA';
         Tef='NA';
         Pef='NA';
         uef='NA';
         Te='NA';
-        [To6, Po6, fabmax] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
+        [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [To7, Po7, ynm] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2, Prnm);
         [Tec, Pe, uec] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, uec, uec, u, beta, Pa, M, HVf);
-    elseif fab & ~Nmix % with afterburner, no nozzle mixing
+    elseif fab>0 && ~Nmix % with afterburner, no nozzle mixing
         fabmax='NA';
         To7='NA';
         Po7='NA';
         ynm='NA';
         uec='NA';
         Tec='NA';
-        [To6, Po6, fabmax] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
+        [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [Tef, Pef, uef] = fanNozzle(To2, Po2, Pa, MW(10), y(10), eff(9));
         [Te, Pe, ue] = coreNozzle(To6, Po6, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, uef, u, beta, Pa, M, HVf);
-    elseif ~fab & Nmix % with nozzle mixing, no afterburner
+    elseif fab==0 && Nmix % with nozzle mixing, no afterburner
         To6='NA';
         Po6='NA';
         ue='NA';
@@ -97,23 +97,26 @@ else % turbofan
     end
 end
 
-% Generate Table for outputs
-titletop = [{'Inputs'}, cell(1,11)];
-inputs = {'Ta(K)','Pa(kPa)','M','Prc','Prf','beta','b','f','fab';
-           Ta,Pa/1000,M,Prc,Prf,beta,b,f,fab};
-inputs = [inputs cell(2,3)];
-titlebot = [{'Ouputs'}, cell(1,11)];
-output1 = {'To1(K)','Po1(kPa)','To2(K)','Po2(kPa)','To3(K)','Po3(kPa)','To4(K)','Po4(kPa)','To5.1','Po5.1(kPa)','To5.m(K)','Po5.m(kPa)';
-            To1,Po1/1000,To2,Po2/1000,To3,Po3/1000,To4,Po4/1000,To5_1,Po5_1/1000,To5_m,Po5_m/1000};
-output2 = {'To5.2(K)','Po5.2(kPa)','To6(K)','Po6(kPa)','Te(K)','Pe(K)','Tef(K)','Pef(kPa)','To7(K)','ynm','Po7(kPa)','Tec(K)';
-            To5_2,Po5_2/1000,To6,Po6/1000,Te,Pe/1000,Tef,Pef,To7,ynm,Po7,Tec};
+if T
+    % Generate Table for outputs
+    titletop = [{'Inputs'}, cell(1,11)];
+    inputs = {'Ta(K)','Pa(kPa)','M','Prc','Prf','beta','b','f','fab';
+        Ta,Pa/1000,M,Prc,Prf,beta,b,f,fab};
+    inputs = [inputs cell(2,3)];
+    titlebot = [{'Ouputs'}, cell(1,11)];
+    output1 = {'To1(K)','Po1(kPa)','To2(K)','Po2(kPa)','To3(K)','Po3(kPa)','To4(K)','Po4(kPa)','To5.1','Po5.1(kPa)','To5.m(K)','Po5.m(kPa)';
+        To1,Po1/1000,To2,Po2/1000,To3,Po3/1000,To4,Po4/1000,To5_1,Po5_1/1000,To5_m,Po5_m/1000};
+    output2 = {'To5.2(K)','Po5.2(kPa)','To6(K)','Po6(kPa)','Te(K)','Pe(K)','Tef(K)','Pef(kPa)','To7(K)','ynm','Po7(kPa)','Tec(K)';
+        To5_2,Po5_2/1000,To6,Po6/1000,Te,Pe/1000,Tef,Pef,To7,ynm,Po7,Tec};
+    
+    perform = {'ue(m/s)','uef(m/s)','ST(kNs/kg)','TSFC(kg/kNs)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)','fmax','fmaxab';
+        ue,uef,ST/1000,TSFC,effth*100,effp*100,effo*100,wc_ma/1000,wp_ma/1000,wf_ma/1000,fmax,fabmax};
+    warning('off','MATLAB:xlswrite:AddSheet')
+    xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform]);
+    disp('done.');
+end
 
-perform = {'ue(m/s)','uef(m/s)','ST(kNs/kg)','TSFC(kg/kNs)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)','fmax','fmaxab';
-            ue,uef,ST/1000,TSFC,effth*100,effp*100,effo*100,wc_ma/1000,wp_ma/1000,wf_ma/1000,fmax,fabmax};
-warning('off','MATLAB:xlswrite:AddSheet')
-table = xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform]);
-disp('done.');
-
+out = [ST, TSFC, To3, To5_2, f, fab];
 end
 
 
@@ -151,7 +154,7 @@ To3 = To2*(Prc).^((yc-1)/yc/nc);
 wc_ma = Cp*(To3-To2);
 end
 
-function [To4, Po4, wp_ma, fmax] = burner(To3, Po3, Prb, b, f, MW, yb, nb, nfp, HVf, Tomax, Pf)
+function [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW, yb, nb, nfp, HVf, Tomax, Pf)
 Cb = 700; %kelvin
 R = 8314;
 bmax = 0.12;
@@ -162,7 +165,7 @@ Tmax = Tomax + Cb*(b/bmax)^0.5;
 Cp = yb*(R/MW)/(yb-1);
 fmax = (1-b)*(1-To3/Tmax)/((nb*HVf/Cp/Tmax)-1);
 if f > fmax
-    error('f is greater than fmax = %d',fmax);
+    f=fmax;
 end
 To4 = (1/(1-b+f))*((1-b)*To3+nb*HVf*f/Cp);
 Po4 = Po3*Prb;
@@ -180,7 +183,7 @@ Po5_1 = Po4*(TR^(1/nt))^(yt/(yt-1));
 end
 
 function [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW, ytm)
-R = 8314;
+%R = 8314;
 %Cp = ytm*(R/MW)/(ytm-1);
 To5_m = (b*To3 + (1+f-b)*To5_1)/(1+f);
 Po5_m = Po5_1*((To5_m/To5_1)^(ytm/(ytm-1)))*(To5_1/To3)^(ytm*b/((ytm-1)*(1+f)));
@@ -194,12 +197,12 @@ TR = To5_2/To5_m;
 Po5_2 = Po5_m*(TR^(1/nft))^(yft/(yft-1));
 end
 
-function [To6, Po6, fabmax] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW, yab, nab, HVf, Tmax_ab)
+function [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW, yab, nab, HVf, Tmax_ab)
 R = 8314;
 cpab = yab*(R/MW)/(yab-1);
 fabmax = (1+fmax)*((Tmax_ab/To5_2)-1)/((nab*HVf/cpab/To5_2)-(Tmax_ab/To5_2));
 if fab > fabmax
-    error('fab is greater than fabmax = %d',fabmax);
+    fab=fabmax;
 end
 Po6 = Po5_2*Prab;
 To6 = (1/(1+f+fab))*((1+f)*To5_2+nab*HVf*fab/cpab);
@@ -245,5 +248,3 @@ effth = (beta*uef^2+(1+f+fab)*ue^2-(beta+1)*u^2)/(2*(f+fab)*HVf);
 effp = 2*ST*u/(beta*uef^2+(1+f+fab)*ue^2-(beta+1)*u^2);
 effo = effth*effp;
 end
-
-
