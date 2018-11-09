@@ -28,7 +28,7 @@ This package was designed to meet and exceed the requirements of Georgia Tech's 
     * Several of these may not be known by the designer beforehand and the default values can be used.
   #### Visualization:
     * Here you can visualize the effect varying the fuel-air ratio, afterburner fuel-air ratio, and bleed ratio has on the specific thrust and thrust specific fuel consumption.
-    * The 'Calculate' and 'Optimize' buttons on the 'Initialization' tab will also update these graphs.
+    * The  'Optimize' button on the 'Initialization' tab will also update these graphs.
   #### Results:
     * This tab shows all the calculated intermediary and final results in a single table.
 ### Closing the app
