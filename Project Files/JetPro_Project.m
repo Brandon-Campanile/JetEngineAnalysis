@@ -17,7 +17,6 @@ syms Te Tef To7 Tec Po7 uec uef ue Po6 To6 Pe Pef ynm wf_ma wc_ma wp_ma fabmax
 
 ynm=y(8);
 R = 8314;
-Pa = Pa*1e3; % ambient pressure in Pa
 u = M*sqrt(y(1)*Ta*R/MW(1)); %vaircraft velocity
 
 
