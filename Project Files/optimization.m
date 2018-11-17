@@ -36,7 +36,7 @@ for ab=0:1
     
     nlc = @(x)nonlcon(x, T, ST, eType, Nmix, Ta, Pa, Pf, M, Prb, Prab, Prnm, Tomax, Tmax_ab, MW, eff, y, HVf);
     
-    b_min = fmincon(func, x0, A, c, Aeq, beq, lb, ub, nlc);
+    b_min = patternsearch(func, x0, A, c, Aeq, beq, lb, ub, nlc);
     
     minVar{ab+1} = b_min;
     
