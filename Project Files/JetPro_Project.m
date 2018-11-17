@@ -22,6 +22,7 @@ u = M*sqrt(y(1)*Ta*R/MW(1)); %vaircraft velocity
 
 % Run components based on engine cycles
 if ~eType % turbojet
+    beta=0;
     [To1, Po1] = diffuser(Ta, Pa, M, y(1), eff(1));
     To2=To1;
     Po2=Po1;
