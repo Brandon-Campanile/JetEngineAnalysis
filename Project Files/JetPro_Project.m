@@ -31,6 +31,7 @@ if ~eType % turbojet
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     To5_2=To5_m;
     Po5_2=Po5_m;
+    wf_ma='NA';
     if fab>0 % with afterburner
         To7 = 'NA';
         Po7='NA';
