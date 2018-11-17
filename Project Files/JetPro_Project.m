@@ -26,7 +26,7 @@ if ~eType % turbojet
     To2=To1;
     Po2=Po1;
     [To3, Po3, wc_ma] = compressor(To1, Po1, Prc, Prf, MW(3), y(3), eff(3));
-    [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
+    [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf, fab);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     To5_2=To5_m;
@@ -46,7 +46,7 @@ else % turbofan
     [To1, Po1] = diffuser(Ta, Pa, M, y(1), eff(1));
     [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta, MW(2), y(2), eff(2));
     [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf, MW(3), y(3), eff(3));
-    [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf);
+    [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf, fab);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
     [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW(7), y(7), eff(6));
@@ -58,7 +58,7 @@ else % turbofan
         Te='NA';
         [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [To7, Po7, ynm] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2, Prnm);
-        [Tec, Pe, uec] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
+        [Tec, Pe, ue] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, uec, uec, u, beta, Pa, M, HVf);
     elseif fab>0 && ~Nmix % with afterburner, no nozzle mixing
         fabmax='NA';
@@ -80,7 +80,7 @@ else % turbofan
         Tef='NA';
         Pef='NA';
         [To7, Po7, ynm] = nozzleMixer(To5_2, Po5_2, beta, f, fab, Po2, To2, Prnm);
-        [Tec, Pe, uec] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
+        [Tec, Pe, ue] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, uec, uec, u, beta, Pa, M, HVf);
     else % no nozzle mixing or afterburner
         To6='NA';
@@ -106,10 +106,10 @@ if T
     output1 = {'To1(K)','Po1(kPa)','To2(K)','Po2(kPa)','To3(K)','Po3(kPa)','To4(K)','Po4(kPa)','To5.1','Po5.1(kPa)','To5.m(K)','Po5.m(kPa)';
         To1,Po1/1000,To2,Po2/1000,To3,Po3/1000,To4,Po4/1000,To5_1,Po5_1/1000,To5_m,Po5_m/1000};
     output2 = {'To5.2(K)','Po5.2(kPa)','To6(K)','Po6(kPa)','Te(K)','Pe(K)','Tef(K)','Pef(kPa)','To7(K)','ynm','Po7(kPa)','Tec(K)';
-        To5_2,Po5_2/1000,To6,Po6/1000,Te,Pe/1000,Tef,Pef,To7,ynm,Po7,Tec};
+        To5_2,Po5_2/1000,To6,Po6/1000,Te,Pe/1000,Tef,Pef/1000,To7,ynm,Po7/1000,Tec};
     
     perform = {'ue(m/s)','uef(m/s)','ST(kNs/kg)','TSFC(kg/kNs)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)','fmax','fmaxab';
-        ue,uef,ST/1000,TSFC,effth*100,effp*100,effo*100,wc_ma/1000,wp_ma/1000,wf_ma/1000,fmax,fabmax};
+        ue,uef,ST/1000,TSFC*1000,effth*100,effp*100,effo*100,wc_ma/1000,wp_ma/1000,wf_ma/1000,fmax,fabmax};
     warning('off','MATLAB:xlswrite:AddSheet')
     xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform]);
     disp('done.');
@@ -145,15 +145,13 @@ end
 function [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, Prf, MW, yc, nc)
 R = 8314;
 Cp = yc*(R/MW)/(yc-1);
-if Prc > 60/Prf
-    error('Compressor pressure ratio must be less than 60/fan pressure ratio');
-end
+
 Po3 = Po2*Prc;
 To3 = To2*(Prc).^((yc-1)/yc/nc);
 wc_ma = Cp*(To3-To2);
 end
 
-function [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW, yb, nb, nfp, HVf, Tomax, Pf)
+function [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW, yb, nb, nfp, HVf, Tomax, Pf, fab)
 Cb = 700; %kelvin
 R = 8314;
 bmax = 0.12;
@@ -163,14 +161,12 @@ f_density = 780;
 Tmax = Tomax + Cb*(b/bmax)^0.5;
 Cp = yb*(R/MW)/(yb-1);
 fmax = (1-b)*(1-To3/Tmax)/((nb*HVf/Cp/Tmax)-1);
-if f > fmax
-    f=fmax;
-end
+
 To4 = (1/(1-b+f))*((1-b)*To3+nb*HVf*f/Cp);
 Po4 = Po3*Prb;
 
 %Fuel Pump
-wp_ma = f*deltaP_inject/nfp/f_density;
+wp_ma = (f+fab)*(Po3+deltaP_inject-Pf)/nfp/f_density;
 end
 
 function [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW, yt, nt)
@@ -200,9 +196,7 @@ function [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax,
 R = 8314;
 cpab = yab*(R/MW)/(yab-1);
 fabmax = (1+fmax)*((Tmax_ab/To5_2)-1)/((nab*HVf/cpab/To5_2)-(Tmax_ab/To5_2));
-if fab > fabmax
-    fab=fabmax;
-end
+
 Po6 = Po5_2*Prab;
 To6 = (1/(1+f+fab))*((1+f)*To5_2+nab*HVf*fab/cpab);
 end
