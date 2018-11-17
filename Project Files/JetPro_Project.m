@@ -37,6 +37,7 @@ if ~eType % turbojet
         Tef='NA';
         Pef='NA';
         uef='NA';
+        wf_ma = 'NA';
         [To6, Po6, fabmax, fab] = afterburner(Po5_m, To5_m, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [Te, Pe, ue] = coreNozzle(To6, Po6, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
@@ -51,6 +52,7 @@ if ~eType % turbojet
         Pef='NA';
         uef='NA';
         fabmax='NA';
+        wf_ma = 'NA';
         [Te, Pe, ue] = coreNozzle(To5_m, Po5_m, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
         Pe=Pe/1000;
