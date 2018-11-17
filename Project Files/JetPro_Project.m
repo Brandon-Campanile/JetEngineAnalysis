@@ -35,12 +35,15 @@ if ~eType % turbojet
         [To6, Po6, fabmax, fab] = afterburner(Po5_m, To5_m, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [Te, Pe, ue] = coreNozzle(To6, Po6, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
+        Po6=Po6/1000;
+        Pe=Pe/1000;
     else % without afterburner
         To6='NA';
         Po6='NA';
         fabmax='NA';
         [Te, Pe, ue] = coreNozzle(To5_m, Po5_m, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
+        Pe=Pe/1000;
     end
 else % turbofan
     [To1, Po1] = diffuser(Ta, Pa, M, y(1), eff(1));
@@ -58,8 +61,11 @@ else % turbofan
         Te='NA';
         [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax, MW(8), y(8), eff(7), HVf, Tmax_ab);
         [To7, Po7, ynm] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2, Prnm);
-        [Tec, Pe, ue] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
-        [ST, TSFC, effth, effp, effo] = performance(f, fab, uec, uec, u, beta, Pa, M, HVf);
+        [Te, Pe, ue] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
+        [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
+        Po6=Po6/1000;
+        Po7=Po7/1000;
+        Pe=Pe/1000;
     elseif fab>0 && ~Nmix % with afterburner, no nozzle mixing
         fabmax='NA';
         To7='NA';
@@ -71,6 +77,9 @@ else % turbofan
         [Tef, Pef, uef] = fanNozzle(To2, Po2, Pa, MW(10), y(10), eff(9));
         [Te, Pe, ue] = coreNozzle(To6, Po6, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, uef, u, beta, Pa, M, HVf);
+        Po6=Po6/1000;
+        Pef=Pef/1000;
+        Pe=Pe/1000;
     elseif fab==0 && Nmix % with nozzle mixing, no afterburner
         To6='NA';
         Po6='NA';
@@ -80,8 +89,10 @@ else % turbofan
         Tef='NA';
         Pef='NA';
         [To7, Po7, ynm] = nozzleMixer(To5_2, Po5_2, beta, f, fab, Po2, To2, Prnm);
-        [Tec, Pe, ue] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
-        [ST, TSFC, effth, effp, effo] = performance(f, fab, uec, uec, u, beta, Pa, M, HVf);
+        [Te, Pe, ue] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
+        [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
+        Po7=Po7/1000;
+        Pe=Pe/1000;
     else % no nozzle mixing or afterburner
         To6='NA';
         Po6='NA';
@@ -93,6 +104,8 @@ else % turbofan
         [Tef, Pef, uef] = fanNozzle(To2, Po2, Pa, MW(10), y(10), eff(9));
         [Te, Pe, ue] = coreNozzle(To5_2, Po5_2, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, uef, u, beta, Pa, M, HVf);
+        Pef = Pef/1000;
+        Pe = Pe/1000;
     end
 end
 
@@ -105,11 +118,11 @@ if T
     titlebot = [{'Ouputs'}, cell(1,11)];
     output1 = {'To1(K)','Po1(kPa)','To2(K)','Po2(kPa)','To3(K)','Po3(kPa)','To4(K)','Po4(kPa)','To5.1','Po5.1(kPa)','To5.m(K)','Po5.m(kPa)';
         To1,Po1/1000,To2,Po2/1000,To3,Po3/1000,To4,Po4/1000,To5_1,Po5_1/1000,To5_m,Po5_m/1000};
-    output2 = {'To5.2(K)','Po5.2(kPa)','To6(K)','Po6(kPa)','Te(K)','Pe(K)','Tef(K)','Pef(kPa)','To7(K)','ynm','Po7(kPa)','Tec(K)';
-        To5_2,Po5_2/1000,To6,Po6/1000,Te,Pe/1000,Tef,Pef/1000,To7,ynm,Po7/1000,Tec};
+    output2 = {'To5.2(K)','Po5.2(kPa)','To6(K)','Po6(kPa)','To7(K)','Po7(kPa)','Te(K)','Pe(K)','ue(m/s)','Tef(K)','Pef(kPa)','uef(m/s)';
+        To5_2,Po5_2/1000,To6,Po6,To7,Po7,Te,Pe,ue,Tef,Pef,uef};
     
-    perform = {'ue(m/s)','uef(m/s)','ST(kNs/kg)','TSFC(kg/kNs)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)','fmax','fmaxab';
-        ue,uef,ST/1000,TSFC*1000,effth*100,effp*100,effo*100,wc_ma/1000,wp_ma/1000,wf_ma/1000,fmax,fabmax};
+    perform = {'ynm','ST(kNs/kg)','TSFC(kg/kNs)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)','fmax','fmaxab','';
+        ynm,ST/1000,TSFC*1000,effth*100,effp*100,effo*100,wc_ma/1000,wp_ma/1000,wf_ma/1000,fmax,fabmax,''};
     warning('off','MATLAB:xlswrite:AddSheet')
     xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform]);
     disp('done.');
