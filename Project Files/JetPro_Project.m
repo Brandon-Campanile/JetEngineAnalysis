@@ -13,7 +13,7 @@ function out = JetPro_Project(T, eType, Nmix, Ta, Pa, Pf, M, Prf, Prc, Prb, Prab
 % Tmax_ab = max stagnation temp afternburner [K]; Prab = stagnation pressure ratio afterburner; MW = list of all
 % molecular weights; y = list of all specific heat ratios; eff = list of component efficiencies
 % eType = 1 for turbofan 0 for turbojet; Nmix = nozzle mixing?; T = 1 for final run, 0 for optimization run
-% syms Te Tef To7 Tec Po7 uec uef ue Po6 To6 Pe Pef ynm wf_ma wc_ma wp_ma fabmax
+
 
 ynm=y(8);
 R = 8314;
@@ -102,6 +102,7 @@ else % turbofan
         Te='NA';
         Tef='NA';
         Pef='NA';
+        fabmax='NA';
         [To7, Po7, ynm] = nozzleMixer(To5_2, Po5_2, beta, f, fab, Po2, To2, Prnm);
         [Te, Pe, ue] = combinedNozzle(To7, Po7, Pa, MW(12), y(11), eff(10));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, ue, u, beta, Pa, M, HVf);
@@ -115,6 +116,7 @@ else % turbofan
         uec='NA';
         Tec='NA';
         ynm='NA';
+        fabmax='NA';
         [Tef, Pef, uef] = fanNozzle(To2, Po2, Pa, MW(10), y(10), eff(9));
         [Te, Pe, ue] = coreNozzle(To5_2, Po5_2, Pa, MW(9), y(9), eff(8));
         [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, uef, u, beta, Pa, M, HVf);
