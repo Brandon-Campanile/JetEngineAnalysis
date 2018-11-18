@@ -36,7 +36,7 @@ for ab=0:1
     
     nlc = @(x)nonlcon(x, T, ST, eType, Nmix, Ta, Pa, Pf, M, Prb, Prab, Prnm, Tomax, Tmax_ab, MW, eff, y, HVf);
     
-    options=optimoptions('fmincon','Display','iter','Algorithm','sqp');
+    options=optimoptions('fmincon','Display','iter'); % ,'Algorithm','sqp');
     
     b_min = fmincon(func, x0, A, c, Aeq, beq, lb, ub, nlc, options);
     
