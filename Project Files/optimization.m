@@ -14,33 +14,33 @@ for ab=0:1
             % [bypass ratio, fan pressure ratio, compressor pressure ratio, fuel-air ratio, afterburner fuel-air ratio, bleed ratio]
             lb = [0.001, 1.1, 10, .001, .0005, 0]; % lower bound
             ub = [10, 1.5, 54.545455, .1, .1, .12];        % upper bound
-            x0 = [5, 1.25, 30, .05, .03, .05];
+            x0 = [8, 1.25, 40, .05, .05, .05];
         else
             lb = [.001, 1.1, 10, .001, 0, 0];
             ub = [10, 1.5, 54.545455, .1, 0, .12];
-            x0 = [5, 1.25, 30, .05, 0, .05];
+            x0 = [8, 1.25, 40, .05, 0, .05];
         end
     elseif strcmp(eType, 'Turbojet')
         if ab % w/ afterburner
             % compressor pressure ratio, fuel air ratio, afterburner fuel air ratio, bleed ratio
             lb = [10, .001, .0005, 0];
             ub = [54.545455, .1, .1, .12];
-            x0 = [30, .05, .03, .05];
+            x0 = [40, .05, .05, .05];
         else
             lb = [10, .001, 0, 0];
             ub = [54.545455, .1, 0, .12];
-            x0 = [30, .05, 0, .05];
+            x0 = [40, .05, 0, .05];
         end
     else % ramjet
         if ab % w/ afterburner
             % fuel air ratio, afterburner fuel air ratio, bleed ratio
             lb = [.001, .0005, 0];
             ub = [.1, .1, .12];
-            x0 = [.05, .03, .05];
+            x0 = [.05, .05, .05];
         else
             lb = [.001, 0, 0];
             ub = [.1, 0, .12];
-            x0 = [.02, 0, .01];
+            x0 = [.05, 0, .05];
         end
     end
     
