@@ -12,7 +12,7 @@ function out = JetPro_Project(T, eType, Nmix, Ta, Pa, Pf, M, Prf, Prc, Prb, Prab
 % fab = afterburner fuel-air ratio; Nmix = nozzle mixing boolean; Tmax = burner max stagnation temp [K];
 % Tmax_ab = max stagnation temp afternburner [K]; Prab = stagnation pressure ratio afterburner; MW = list of all
 % molecular weights; y = list of all specific heat ratios; eff = list of component efficiencies
-% eType = 1 for turbofan 0 for turbojet; Nmix = nozzle mixing?; T = 1 for final run, 0 for optimization run
+% eType = 1 for turbofan 0 for turbojet; Nmix = nozzle mixing?; T = 1 for final run, 0 for optimization run 
 
 ynm=y(8);
 R = 8314;
@@ -334,6 +334,9 @@ R = 8314;
 Cp = ycn*(R/MW)/(ycn-1);
 Tec = To7*(1-ncn*(1-(Pa/Po7)^((ycn-1)/ycn)));
 uec = sqrt(2*Cp*(To7-Tec));
+if ~isreal(uec)
+    uec=0;
+end
 end
 
 
