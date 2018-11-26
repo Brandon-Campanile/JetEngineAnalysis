@@ -196,6 +196,7 @@ else %Ramjet
         Pe=Pe/1000;
     end
 end
+L=[];
 if T
     % Generate Table for outputs
     titletop = [{'Inputs'}, cell(1,11)];
@@ -208,19 +209,27 @@ if T
     output2 = {'To5.2(K)','Po5.2(kPa)','To6(K)','Po6(kPa)','To7(K)','Po7(kPa)','Te(K)','Pe(kPa)','ue(m/s)','Tef(K)','Pef(kPa)','uef(m/s)';
         To5_2,Po5_2,To6,Po6,To7,Po7,Te,Pe,ue,Tef,Pef,uef};
     
-    perform1 = {'Tec(K)','Pec(kPa)','uec(m/s)','ynm','ST(kNs/kg)','TSFC(kg/kNs)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)';
+    perform1 = {'Tec(K)','Pec(kPa)','uec(m/s)','ynm','ST(kNs/kg)','TSFC(kg/kN/s)','nth(%)','np(%)','no(%)','Wc(kJ/kg)','Wp(kJ/kg)','Wft(kJ/kg)';
         Tec, Pec, uec, ynm,ST/1000,TSFC*1000,effth*100,effp*100,effo*100,wc_ma,wp_ma,wf_ma};
     perform2 = {'fmax','fmaxab','','','','','','','','','','';fmax,fabmax,'','','','','','','','','',''};
-    warning('off','MATLAB:xlswrite:AddSheet')
-    xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform1;cell(1,12);perform2]);
-end
-
-if strcmp(eType,'Turbojet')
-    out = [ST, TSFC, To3, To5_m, f, fab];
-elseif strcmp(eType,'Turbofan')
-    out = [ST, TSFC, To3, To5_2, f, fab];
+    F = cell2table([titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform1;cell(1,12);perform2]);
+    writetable(F,'Results.xlsx');
+    
+    if strcmp(eType,'Turbojet')
+        out = {ST, TSFC, To3, To5_m, f, fab, To1, To2, To4, To5_1, To5_2, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef};
+    elseif strcmp(eType,'Turbofan')
+        out = {ST, TSFC, To3, To5_2, f, fab, To1, To2, To4, To5_1, To5_m, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef};
+    else
+        out = {ST, TSFC, To1, To4, f, fab, To3, To2, To5_2, To5_1, To5_m, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef};
+    end
 else
-    out = [ST, TSFC, To1, To4, f, fab];
+    if strcmp(eType,'Turbojet')
+        out = {ST, TSFC, To3, To5_m, f, fab};
+    elseif strcmp(eType,'Turbofan')
+        out = {ST, TSFC, To3, To5_2, f, fab};
+    else
+        out = {ST, TSFC, To1, To4, f, fab};
+    end
 end
 end
 
