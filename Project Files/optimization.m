@@ -1,9 +1,5 @@
 function Values = optimization(ST, eType, Nmix, Ta, Pa, Pf, M, ~, ~, Prb, Prab, Prnm, ~, ~, ~, ~, Tomax, Tmax_ab, MW, eff, y, HVf)
 
-A = [];
-c = [];
-Aeq = [];
-beq = [];
 T = 0;
 TSFC = zeros(1,2);
 minVar = cell(1,2);
@@ -12,35 +8,35 @@ for ab=0:1
     if strcmp(eType, 'Turbofan')
         if ab % w/ afterburner
             % [bypass ratio, fan pressure ratio, compressor pressure ratio, fuel-air ratio, afterburner fuel-air ratio, bleed ratio]
-            lb = [0.001, 1.1, 10, .001, .0005, 0]; % lower bound
+            lb = [0.001, 1.1, 20, .001, .0005, 0]; % lower bound
             ub = [10, 1.5, 54.545455, .1, .1, .12];        % upper bound
-            x0 = [8, 1.25, 40, .05, .05, .05];
+            x0 = [8, 1.25, 45, .03, .03, .08];
         else
-            lb = [.001, 1.1, 10, .001, 0, 0];
+            lb = [.001, 1.1, 20, .001, 0, 0];
             ub = [10, 1.5, 54.545455, .1, 0, .12];
-            x0 = [8, 1.25, 40, .05, 0, .05];
+            x0 = [8, 1.25, 45, .03, 0, .08];
         end
     elseif strcmp(eType, 'Turbojet')
         if ab % w/ afterburner
             % compressor pressure ratio, fuel air ratio, afterburner fuel air ratio, bleed ratio
-            lb = [10, .001, .0005, 0];
+            lb = [5, .001, .0005, 0];
             ub = [54.545455, .1, .1, .12];
-            x0 = [40, .05, .05, .05];
+            x0 = [20, .02, .01, .08];
         else
-            lb = [10, .001, 0, 0];
+            lb = [5, .001, 0, 0];
             ub = [54.545455, .1, 0, .12];
-            x0 = [40, .05, 0, .05];
+            x0 = [20, .02, 0, .08];
         end
     else % ramjet
         if ab % w/ afterburner
             % fuel air ratio, afterburner fuel air ratio, bleed ratio
             lb = [.001, .0005, 0];
             ub = [.1, .1, .12];
-            x0 = [.05, .05, .05];
+            x0 = [.03, .03, .08];
         else
             lb = [.001, 0, 0];
             ub = [.1, 0, .12];
-            x0 = [.05, 0, .05];
+            x0 = [.03, 0, .08];
         end
     end
     
@@ -48,9 +44,11 @@ for ab=0:1
     
     nlc = @(x)nonlcon(x, T, ST, eType, Nmix, Ta, Pa, Pf, M, Prb, Prab, Prnm, Tomax, Tmax_ab, MW, eff, y, HVf);
     
-    % options=optimoptions('fmincon','Display','iter','Algorithm','sqp');
+    problem = createOptimProblem('fmincon','objective', func,'x0',x0,'lb',lb,'ub',ub,'nonlcon', nlc);
     
-    b_min = fmincon(func, x0, A, c, Aeq, beq, lb, ub, nlc); % , options);
+    gs=GlobalSearch('NumTrialPoints',3000);
+
+    b_min = run(gs,problem);
     
     minVar{ab+1} = b_min;
     

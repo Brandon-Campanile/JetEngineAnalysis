@@ -212,7 +212,8 @@ if T
         Tec, Pec, uec, ynm,ST/1000,TSFC*1000,effth*100,effp*100,effo*100,wc_ma,wp_ma,wf_ma};
     perform2 = {'fmax','fmaxab','','','','','','','','','','';fmax,fabmax,'','','','','','','','','',''};
     warning('off','MATLAB:xlswrite:AddSheet')
-    xlswrite('Results.xlsx',[titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform1;cell(1,12);perform2]);
+    F = cell2table([titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform1;cell(1,12);perform2]);
+    writetable(F,'Results.xlsx');
 end
 
 if strcmp(eType,'Turbojet')
