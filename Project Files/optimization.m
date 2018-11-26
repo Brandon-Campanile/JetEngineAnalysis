@@ -83,10 +83,10 @@ else
     b = x(3);
 end
 output = JetPro_Project(T, eType, Nmix, Ta(1), Pa(1), Pf, M(1), Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tomax, Tmax_ab, MW, eff, y, HVf);
-TSFC2 = output(2);
+TSFC2 = output{2};
 
 output2 = JetPro_Project(T, eType, Nmix, Ta(2), Pa(2), Pf, M(2), Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tomax, Tmax_ab, MW, eff, y, HVf);
-TSFC3 = output2(2);
+TSFC3 = output2{2)};
 TSFC4 = TSFC2 + TSFC3;
 end
 
@@ -123,15 +123,15 @@ out2 = JetPro_Project(T, eType, Nmix, Ta(1), Pa(1), Pf, M(1), Prf, Prc, Prb, Pra
 Cp1 = y(4)*(R/MW(4))/(y(4)-1);
 Cp2 = y(8)*(R/MW(8))/(y(8)-1);
 Tmax = Tomax + CB*(b/bmax)^0.5;
-fmax = (1-b)*(1-out2(3)/Tmax)/(eff(4)*HVf/Cp1/Tmax - 1);
+fmax = (1-b)*(1-out2{3}/Tmax)/(eff(4)*HVf/Cp1/Tmax - 1);
 
 g(1) = Prc - 60/Prf; % prc<=60/prf
 g(2) = f - fmax; % f <= fmax
-g(3) = (out2(3)+f*HVf/Cp1)/(1+f-b) - Tmax; % Tb <= Tmax
-g(4) = ST(1)*1000-out2(1); % ST >= STdesired
+g(3) = (out2{3}+f*HVf/Cp1)/(1+f-b) - Tmax; % Tb <= Tmax
+g(4) = ST(1)*1000-out2{1}; % ST >= STdesired
 if fab>0
-    g(5) = (out2(4) + (f+fab)*HVf/Cp2)/(1+f+fab) - Tmax_ab; % Tab <= Tmaxab
-    g(6) = fab - (1+fmax)*(Tmax_ab/out2(4) - 1)/((eff(7)*HVf/Cp2 - Tmax_ab)/out2(4)); % fab <= fmaxab
+    g(5) = (out2{4} + (f+fab)*HVf/Cp2)/(1+f+fab) - Tmax_ab; % Tab <= Tmaxab
+    g(6) = fab - (1+fmax)*(Tmax_ab/out2{4} - 1)/((eff(7)*HVf/Cp2 - Tmax_ab)/out2{4}); % fab <= fmaxab
 else
     g(5)=0;
     g(6)=0;
@@ -139,11 +139,11 @@ end
 
 out3 = JetPro_Project(T, eType, Nmix, Ta(2), Pa(2), Pf, M(2), Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tomax, Tmax_ab, MW, eff, y, HVf);
 
-g(7) = (out3(3)+f*HVf/Cp1)/(1+f-b) - Tmax; % Tb <= Tmax
-g(8) = ST(2)*1000-out3(1); % ST >= STdesired
+g(7) = (out3{3}+f*HVf/Cp1)/(1+f-b) - Tmax; % Tb <= Tmax
+g(8) = ST(2)*1000-out3{1}; % ST >= STdesired
 if fab>0
-    g(9) = (out3(4) + (f+fab)*HVf/Cp2)/(1+f+fab) - Tmax_ab; % Tab <= Tmaxab
-    g(10) = fab - (1+fmax)*(Tmax_ab/out3(4) - 1)/((eff(7)*HVf/Cp2 - Tmax_ab)/out3(4)); % fab <= fmaxab
+    g(9) = (out3{4} + (f+fab)*HVf/Cp2)/(1+f+fab) - Tmax_ab; % Tab <= Tmaxab
+    g(10) = fab - (1+fmax)*(Tmax_ab/out3{4} - 1)/((eff(7)*HVf/Cp2 - Tmax_ab)/out3{4}); % fab <= fmaxab
 else
     g(9)=0;
     g(10)=0;
