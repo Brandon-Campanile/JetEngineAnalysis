@@ -49,7 +49,7 @@ for ab=0:1
     
     problem = createOptimProblem('fmincon','objective', func,'x0',x0,'lb',lb,'ub',ub,'nonlcon', nlc, 'options',opt);
     
-    gs=GlobalSearch('NumTrialPoints',750);
+    gs=GlobalSearch('Display','off');
 
     [b_min,~,exitflag] = run(gs,problem);
     
