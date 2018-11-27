@@ -78,7 +78,6 @@ elseif strcmp(eType,'Turbofan')
     Po5_1=Po5_1/1000;
     Po5_m=Po5_m/1000;
     if fab>0 && Nmix % with afterburner and nozzle mixing 
-        ue='NA';
         Tef='NA';
         Pef='NA';
         uef='NA';
@@ -216,19 +215,19 @@ if T
     writetable(F,'Results.xlsx');
     
     if strcmp(eType,'Turbojet')
-        out = {ST, TSFC, To3, To5_m, f, fab, To1, To2, To4, To5_1, To5_2, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef};
+        out = {ST, TSFC, To3, To5_m, f, fab, To1, To2, To4, To5_1, To5_2, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef, b};
     elseif strcmp(eType,'Turbofan')
-        out = {ST, TSFC, To3, To5_2, f, fab, To1, To2, To4, To5_1, To5_m, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef};
+        out = {ST, TSFC, To3, To5_2, f, fab, To1, To2, To4, To5_1, To5_m, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef, b};
     else
-        out = {ST, TSFC, To1, To4, f, fab, To3, To2, To5_2, To5_1, To5_m, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef};
+        out = {ST, TSFC, To1, To4, f, fab, To3, To2, To5_2, To5_1, To5_m, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef, b};
     end
 else
     if strcmp(eType,'Turbojet')
-        out = {ST, TSFC, To3, To5_m, f, fab};
+        out = {ST, TSFC, To3, To5_m, f, fab, b};
     elseif strcmp(eType,'Turbofan')
-        out = {ST, TSFC, To3, To5_2, f, fab};
+        out = {ST, TSFC, To3, To5_2, f, fab, b};
     else
-        out = {ST, TSFC, To1, To4, f, fab};
+        out = {ST, TSFC, To1, To4, f, fab, b};
     end
 end
 end
