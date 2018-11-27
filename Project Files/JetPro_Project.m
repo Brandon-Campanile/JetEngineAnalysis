@@ -25,7 +25,7 @@ if strcmp(eType,'Turbojet')
     [To3, Po3, wc_ma] = compressor(To1, Po1, Prc, MW(3), y(3), eff(3));
     [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf, fab);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
-    [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));    
+    [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, y(6));    
     Po1=Po1/1000;
     Po2='NA';
     Po3=Po3/1000;
@@ -67,7 +67,7 @@ elseif strcmp(eType,'Turbofan')
     [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, MW(3), y(3), eff(3));
     [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW(4), y(4), eff(4), eff(11), HVf, Tomax, Pf, fab);
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
-    [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW(6), y(6));
+    [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, y(6));
     [To5_2, Po5_2] = fanTurbine(To5_m, Po5_m, wf_ma, f, MW(7), y(7), eff(6));
     Po1=Po1/1000;
     Po3=Po3/1000;
@@ -195,8 +195,9 @@ else %Ramjet
         Pe=Pe/1000;
     end
 end
-L=[];
+
 if T
+    
     % Generate Table for outputs
     titletop = [{'Inputs'}, cell(1,11)];
     inputs = {'Ta(K)','Pa(kPa)','M','Prc','Prf','beta','b','f','fab';
@@ -221,13 +222,14 @@ if T
     else
         out = {ST, TSFC, To1, To4, f, fab, To3, To2, To5_2, To5_1, To5_m, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef, b};
     end
+    
 else
     if strcmp(eType,'Turbojet')
-        out = {ST, TSFC, To3, To5_m, f, fab, b};
+        out = [ST, TSFC, To3, To5_m, f, fab, b];
     elseif strcmp(eType,'Turbofan')
-        out = {ST, TSFC, To3, To5_2, f, fab, b};
+        out = [ST, TSFC, To3, To5_2, f, fab, b];
     else
-        out = {ST, TSFC, To1, To4, f, fab, b};
+        out = [ST, TSFC, To1, To4, f, fab, b];
     end
 end
 end
@@ -290,7 +292,7 @@ TR = To5_1/To4;
 Po5_1 = Po4*(TR^(1/nt))^(yt/(yt-1));
 end
 
-function [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, MW, ytm)
+function [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, ytm)
 %R = 8314;
 %Cp = ytm*(R/MW)/(ytm-1);
 To5_m = (b*To3 + (1+f-b)*To5_1)/(1+f);
