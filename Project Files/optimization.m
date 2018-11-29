@@ -86,7 +86,7 @@ output = JetPro_Project(T, eType, Nmix, Ta(1), Pa(1), Pf, M(1), Prf, Prc, Prb, P
 TSFC2 = output{2};
 
 output2 = JetPro_Project(T, eType, Nmix, Ta(2), Pa(2), Pf, M(2), Prf, Prc, Prb, Prab, Prnm, beta, b, f, fab, Tomax, Tmax_ab, MW, eff, y, HVf);
-TSFC3 = output2{2)};
+TSFC3 = output2{2};
 TSFC4 = TSFC2 + TSFC3;
 end
 
