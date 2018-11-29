@@ -21,7 +21,7 @@ opt = optimoptions('fmincon','Algorithm','sqp','MaxIterations',400);
 
 problem = createOptimProblem('fmincon','objective', func,'x0',x0,'lb',lb,'ub',ub,'nonlcon', nlc, 'options',opt);
 
-gs=GlobalSearch('NumTrialPoints',750);
+gs=GlobalSearch('Display','off');
 
 [ST_max,~,exitflag] = run(gs,problem);
 
