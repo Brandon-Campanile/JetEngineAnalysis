@@ -5,8 +5,9 @@ This package was designed to meet and exceed the requirements of Georgia Tech's 
 
 Out code can take any number of design inputs and determine the maximum specific thrust and minimum thrust specific fuel consumption for that configuration. Alternatively, you can select your desired specific thrust, altitude, and mach number and the code will calculate the desired engine component configuration and mass ratios (including compressor bleed) that will minimize the thrust specific fuel consumption. 
 
-
-
+*This application requires the aerospace toolbox be installed in MatLab. Please see [this](https://www.mathworks.com/help/aerotbx/) link for information on the toolbox and [this](https://www.mathworks.com/matlabcentral/answers/101885-how-do-i-install-additional-toolboxes-into-an-existing-installation-of-matlab) link for how to install it.*
+___
+## Tutorial
 
 [![Youtube Tutorial](https://img.youtube.com/vi/c-5Q0Uuz6wk/maxresdefault.jpg)](http://www.youtube.com/watch?v=c-5Q0Uuz6wk)
 ___
