@@ -1,7 +1,14 @@
 %% AE 4451 Jet & Rocket Propulsion Project
-%10/26/2018
-%Authors: Loren Isakson, Brandon Campanile, Matthew Yates
-
+% 10/26/2018
+% Authors: Loren Isakson, Brandon Campanile, Matthew Yates
+%
+% The following function uses several local functions to determine the output of
+% engine components and the respective input to the following component.
+% 
+% The fuction can be called directly with user inputs, but we recommend
+% using the GUI included.
+%
+%
 
 %% Main Function
 
@@ -11,7 +18,7 @@ function out = JetPro_Project(T, eType, Nmix, Ta, Pa, Pf, M, Prf, Prc, Prb, Prab
 % Prb = burner stagnation pressure ratio; beta = bypass ratio; b = bleed ratio; f = main burner fuel-air ratio;
 % fab = afterburner fuel-air ratio; Nmix = nozzle mixing boolean; Tmax = burner max stagnation temp [K];
 % Tmax_ab = max stagnation temp afternburner [K]; Prab = stagnation pressure ratio afterburner; MW = list of all
-% molecular weights; y = list of all specific heat ratios; eff = list of component efficiencies
+% molecular weights; y = list of all specific heat ratios; eff = list of component efficiencies; HVf = heating value of the fuel
 % eType = 1 for turbofan 0 for turbojet; Nmix = nozzle mixing?; T = 1 for final run, 0 for optimization run 
 
 ynm=y(8);
@@ -27,7 +34,7 @@ if strcmp(eType,'Turbojet')
     [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW(5), y(5), eff(5));
     [To5_m, Po5_m] = turbineMixer(To5_1, Po5_1, To3, f, b, y(6));    
     Po1=Po1/1000;
-    Po2='NA';
+    Po2='NA'; % hard code defining NA values for unused components. This allows simplification of table creation from arrays
     Po3=Po3/1000;
     wf_ma='NA';
     To2='NA';
@@ -147,7 +154,7 @@ elseif strcmp(eType,'Turbofan')
         Pef=Pef/1000;
         Pe=Pe/1000;
     end
-else %Ramjet
+else % Ramjet
     beta=0;
     [To1, Po1] = diffuser(Ta, Pa, M, y(1), eff(1));
     To2='NA';
@@ -196,7 +203,7 @@ else %Ramjet
     end
 end
 
-if T
+if T % if final run
     
     % Generate Table for outputs
     titletop = [{'Inputs'}, cell(1,11)];
@@ -215,7 +222,7 @@ if T
     F = cell2table([titletop;inputs;cell(2,12);titlebot;output1;cell(1,12);output2;cell(1,12);perform1;cell(1,12);perform2]);
     writetable(F,'Results.xlsx');
     
-    if strcmp(eType,'Turbojet')
+    if strcmp(eType,'Turbojet') % output use by component table creation in GUI
         out = {ST, TSFC, To3, To5_m, f, fab, To1, To2, To4, To5_1, To5_2, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef, b};
     elseif strcmp(eType,'Turbofan')
         out = {ST, TSFC, To3, To5_2, f, fab, To1, To2, To4, To5_1, To5_m, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef, b};
@@ -223,7 +230,7 @@ if T
         out = {ST, TSFC, To1, To4, f, fab, To3, To2, To5_2, To5_1, To5_m, To6, To7, Te, Tec, Tef, Po1, Po2, Po3, Po4, Po5_1, Po5_m, Po5_2, Po6, Po7, Pe, Pec, Pef, b};
     end
     
-else
+else % intermediary output used by optimize and maximize functions
     if strcmp(eType,'Turbojet')
         out = [ST, TSFC, To3, To5_m, f, fab, b];
     elseif strcmp(eType,'Turbofan')
@@ -238,50 +245,45 @@ end
 
 function [To1, Po1] = diffuser(Ta, Pa, M, yd, nd)
 %static ambient temp, press, mach number, gamma, adiabatic efficiency
-
 if M<=1
     rd=1;
 else
-    rd=1-.075*(M-1)^1.35;
+    rd=1-.075*(M-1)^1.35; % stagnation pressure drop across shocks
 end
 To1 = Ta.*(1+0.5.*(yd-1).*M.^2);
 Po1 = (Pa.*(1+nd.*(To1/Ta - 1)).^(yd/(yd-1)))*rd;
 end
 
 function [To2, Po2, wf_ma] = fan(To1, Po1, Prf, beta, MW, yf, nf)
-%stagnation temp, press, pressure ratio, polytropic efficiency
-R = 8314;
+% stagnation temp, press, pressure ratio, polytropic efficiency
+R = 8314; % universal gas constant
 Cp = yf*(R/MW)/(yf-1);
 To2 = To1.*(Prf).^((yf-1)/yf/nf);
 Po2 = Po1.*Prf;
-wf_ma = Cp*(1+beta)*(To2-To1); % work done by the fan on the fluid
+wf_ma = Cp*(1+beta)*(To2-To1); % Power from fan turbine required to run fan
 end
 
 function [To3, Po3, wc_ma] = compressor(To2, Po2, Prc, MW, yc, nc)
 R = 8314;
 Cp = yc*(R/MW)/(yc-1);
-
 Po3 = Po2*Prc;
 To3 = To2*(Prc).^((yc-1)/yc/nc);
-wc_ma = Cp*(To3-To2);
+wc_ma = Cp*(To3-To2); % power from turbine required to run compressor
 end
 
 function [To4, Po4, wp_ma, fmax, f] = burner(To3, Po3, Prb, b, f, MW, yb, nb, nfp, HVf, Tomax, Pf, fab)
-Cb = 700; %kelvin
+Cb = 700; % kelvin
 R = 8314;
-bmax = 0.12;
-deltaP_inject = 550*10^3;
-f_density = 780;
-
-Tmax = Tomax + Cb*(b/bmax)^0.5;
+bmax = 0.12; % max bleed ratio
+deltaP_inject = 550*10^3; % dynamic pressure of injected fuel
+f_density = 780; % fuel density
+Tmax = Tomax + Cb*(b/bmax)^0.5; % max temperature increase due to compressor bleed cooling
 Cp = yb*(R/MW)/(yb-1);
-fmax = (1-b)*(1-To3/Tmax)/((nb*HVf/Cp/Tmax)-1);
-
+fmax = (1-b)*(1-To3/Tmax)/((nb*HVf/Cp/Tmax)-1); % max fuel-air ratio to meet maximum temperature
 To4 = (1/(1-b+f))*((1-b)*To3+nb*HVf*f/Cp);
 Po4 = Po3*Prb;
-
-%Fuel Pump
-wp_ma = (f+fab)*(Po3+deltaP_inject-Pf)/nfp/f_density;
+wp_ma = (f+fab)*(Po3+deltaP_inject-Pf)/nfp/f_density; % power from turbine required to run the fuel pump
+% (fab accounts for power required to pump fuel to the afterburner)
 end
 
 function [To5_1, Po5_1] = turbine(To4, Po4, wc_ma, wp_ma, b, f, MW, yt, nt)
@@ -311,7 +313,6 @@ function [To6, Po6, fabmax, fab] = afterburner(Po5_2, To5_2, Prab, f, fab, fmax,
 R = 8314;
 cpab = yab*(R/MW)/(yab-1);
 fabmax = (1+fmax)*((Tmax_ab/To5_2)-1)/((nab*HVf/cpab/To5_2)-(Tmax_ab/To5_2));
-
 Po6 = Po5_2*Prab;
 To6 = (1/(1+f+fab))*((1+f)*To5_2+nab*HVf*fab/cpab);
 end
@@ -321,7 +322,7 @@ R = 8314;
 Cp = yn*(R/MW)/(yn-1);
 Te = To6*(1-nn*(1-(Pa/Po6)^((yn-1)/yn)));
 ue = sqrt(2*Cp*(To6-Te));
-if ~isreal(ue)
+if ~isreal(ue) % if bad inputs, a complex number will result for the exit velocity. This sets it to zero and will give the user an error message.
     ue=0;
 end
 end
@@ -331,6 +332,9 @@ R = 8314;
 Cp = yfn*(R/MW)/(yfn-1);
 Tef = To2*(1-nfn*(1-(Pa/Po2)^((yfn-1)/yfn)));
 uef = sqrt(2*Cp*(To2-Tef));
+if ~isreal(uef) 
+    uef=0;
+end
 end
 
 function [To7, Po7, gamma] = nozzleMixer(To6, Po6, beta, f, fab, Po2, To2, Prnm)
@@ -355,7 +359,7 @@ end
 function [ST, TSFC, effth, effp, effo] = performance(f, fab, ue, uef, u, beta, Pa, M, HVf)
 Patm = 101.3*10^3;
 CB = 245;
-deltaD = CB*M^2*Pa/Patm*beta^1.5;
+deltaD = CB*M^2*Pa/Patm*beta^1.5; % drag correction caused by turbofan bypass structure
 ST = (1+f+fab)*ue+beta*uef-(beta+1)*u - deltaD;
 TSFC = (f+fab)/ST;
 effth = (beta*uef^2+(1+f+fab)*ue^2-(beta+1)*u^2)/(2*(f+fab)*HVf);
