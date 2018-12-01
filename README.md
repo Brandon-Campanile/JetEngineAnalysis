@@ -5,11 +5,15 @@ This package was designed to meet and exceed the requirements of Georgia Tech's 
 
 Our code can take any number of design inputs and determine the maximum specific thrust and minimum thrust specific fuel consumption for that configuration. Alternatively, you can select your desired specific thrust, altitude, and mach number and the code will calculate the desired engine component configuration and mass ratios (including compressor bleed) that will minimize the thrust specific fuel consumption. 
 
-*This application requires the aerospace toolbox be installed in MatLab. Please see [this](https://www.mathworks.com/help/aerotbx/) link for information on the toolbox and [this](https://www.mathworks.com/matlabcentral/answers/101885-how-do-i-install-additional-toolboxes-into-an-existing-installation-of-matlab) link for how to install it.*
+*Note 1: This application requires the "aerospace toolbox" be installed in MatLab. Please see [this](https://www.mathworks.com/help/aerotbx/) link for information on the toolbox and [this](https://www.mathworks.com/matlabcentral/answers/101885-how-do-i-install-additional-toolboxes-into-an-existing-installation-of-matlab) link for how to install it.*
+
+*Note 2: The optimization and maximization functions require the "Global Optimization Toolbox" which you can lear about [here](https://www.mathworks.com/help/gads/).*
 ___
 ## Tutorial
 
 [![ ](https://i.imgur.com/vpwhlLY.png)](http://www.youtube.com/watch?v=c-5Q0Uuz6wk)
+
+*Note: MatLab's app designer leaves much to be desired when it comes to scaling applications to different screen resolutions. Your results may therefore vary.*
 ___
 ## How it Works:
 
@@ -51,6 +55,9 @@ ___
     * This tab shows all the calculated intermediary and final results in a single table. Essentially the raw data.
 ### Closing the app
 * When you run the code, an excel file named "Results.xlsx" will be written to your local machine in MatLab's current working directory. When you close the app you will be prompted if you wish to delete this file.
+___
+## Future Updates
 
+* Our application will continue to grow and develop; implementing new features or expanding on existing ones that may be desireable to designers.
 
 
