@@ -9,7 +9,7 @@ Our code can take any number of design inputs and determine the maximum specific
 ___
 ## Tutorial
 
-[![Youtube Tutorial](https://img.youtube.com/vi/c-5Q0Uuz6wk/maxresdefault.jpg)](http://www.youtube.com/watch?v=c-5Q0Uuz6wk)
+[![Youtube Tutorial](https://imgur.com/gallery/9wCKfHW)](http://www.youtube.com/watch?v=c-5Q0Uuz6wk)
 ___
 ## How it Works:
 
