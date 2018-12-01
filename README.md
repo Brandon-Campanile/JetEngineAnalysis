@@ -7,7 +7,7 @@ Our code can take any number of design inputs and determine the maximum specific
 
 *Note 1: This application requires the "aerospace toolbox" be installed in MatLab. Please see [this](https://www.mathworks.com/help/aerotbx/) link for information on the toolbox and [this](https://www.mathworks.com/matlabcentral/answers/101885-how-do-i-install-additional-toolboxes-into-an-existing-installation-of-matlab) link for how to install it.*
 
-*Note 2: The optimization and maximization functions require the "Global Optimization Toolbox" which you can lear about [here](https://www.mathworks.com/help/gads/).*
+*Note 2: The optimization and maximization functions require the "Global Optimization Toolbox" which you can learn about [here](https://www.mathworks.com/help/gads/).*
 ___
 ## Tutorial
 
